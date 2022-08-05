@@ -1,0 +1,141 @@
+.de Id
+.ds Rv \\$3
+.ds Dt \\$4
+..
+.Id $Header: example.1,v 1.2 94/02/15 13:28:25 rapacki Exp $
+.TH discotope 1 \" -*- nroff -*-
+.SH NAME
+discotope \- predict discontinuous B-cell epitopes
+.SH SYNOPSIS
+.B discotope
+[\fB\-chain\fP \fIchainid\fP] [\fB\-d\fP \fIdistance\fP] [\fB\-f\fP \fIfile\fP]
+.br
+	     [\fB\-list\fP \fIfile\fP] [\fB\-pdb\fP \fIpdbname\fP]
+[\fB\-thr\fP \fIthreshold\fP]
+.SH DESCRIPTION
+.B discotope
+predicts discontinuous B cell epitopes from protein three dimensional
+structures. The method utilizes calculation of surface accessibility (estimated
+in terms of contact numbers) and a novel epitope propensity amino acid score.
+The final scores are calculated by combining the propensity scores of residues
+in spatial proximity and the contact numbers. The method is described in detail
+in the reference quoted below.
+
+The input is taken from a file containing \fIone\fP entry
+in PDB flat file format (\fB\-f\fP) or the PDB database
+available on the system (\fB\-pdb\fP, \fB\-chain\fP, \fB\-list\fP).
+
+The output will go to \fIstdout\fP by default.
+
+.B Input preprocessing
+
+Errors found in the input will be printed as warnings to \fIstderr\fP.
+
+.B Output
+
+The output format is as follows:
+
+1. General information about the prediction: chain
+.br
+   selected, contact distance, and threshold;
+
+2. Table of TAB-delimited columns, as follows:
+
+     a) chain ID (if known);
+.br
+     b) sequence number;
+.br
+     c) amino-acid;
+.br
+     d) contact number (number of C-Alpha residues within
+.br
+        the input contact distance);
+.br
+     e) proximity sum (initial score without contact
+.br
+        numbers taken into account);
+.br
+     f) final score;
+.br
+     g) assignment: '<=B' for part of an epitope, else
+.br
+        nothing.
+
+The exact definitions of the terms above are given in the
+article (see \fBREFERENCE\fP below).
+
+The probability of a residue being a part of a discontinuous B-cell
+epitope increases with the overall score for that
+residue. The threshold for assigning a residue to 'B' may be
+adjusted by the user (\fB\-thr\fP) reflecting the need for prediction
+sensitivity/specificity.
+
+The table below offers guidelines for choosing a suitable
+threshold; it shows the relationship between selected
+thresholds and the sensitivity/specificity of the
+predictions. The table is based on an analysis of the
+prediction scores from a large benchmark containing more 
+than 75 antigen/antibody complexes. The following 
+relations were found:
+
+  Score   Sensitivity   Specificity
+   -3.1     0.16           0.95
+   -4.7     0.24           0.90
+   -6.0     0.32           0.85
+   -6.9     0.40           0.80
+   \fB-7.7     0.47           0.75\fP  (default)
+
+It is also possible to set the contact distance used
+in the calculation (\fB\-d\fP).
+.SH OPTIONS
+.TP
+.BI "\-chain" " chainid"
+Specify the chain to use. This option is required if either \fB\-f\fP or
+\fB\-pdb\fP is also given.
+.TP
+.BI "\-d" " distance"
+Set the contact distance to \fIdistance\fP. The default is 10 Angstroms.
+.TP
+.BI "\-f" " file"
+Use the entry in \fIfile\fP as input. The entry must be in \fBPDB\fP
+flat file format.
+.TP
+.BI "\-list" " file"
+Use the PDB entries specified in \fIfile\fP as input. The file must
+consist of lines '\fIentryname\fP_\fIchainid\fP' e.g. 1zz6_B. This
+option will only work if \fBdiscotope\fP has been configured to use
+the PDB database available on the system.
+.TP
+.BI "\-pdb" " pdbname"
+Use the PDB entry \fIpdbname\fP as input. This option will only work
+if \fBdiscotope\fP has been configured to use
+the PDB database available on the system.
+.TP
+.BI "\-thr" " threshold"
+Set the threshold for positive prediction (see above). The default is -7.7.
+.SH BUGS
+.B discotope
+is under development and new features are added frequently. The current
+version is 1.1, Oct 2006. The author will be grateful for bug reports
+and comments.
+.SH AUTHOR
+Nicholas Gauthier, nick@cbs.dtu.dk, Oct 2006.
+.br
+Last updated in Oct 2006 (v. 1.1).
+.SH REFERENCE
+Prediction of residues in discontinuous B cell epitopes using
+protein 3D structures.
+.br
+Pernille Haste Andersen, Morten Nielsen and Ole Lund.
+.br
+Protein Science, 15:2558-2567, 2006.
+
+Up-to-date information on the method can also be found at:
+
+    http://www.cbs.dtu.dk/services/DiscoTope/
+
+.SH FILES
+\fB/usr/opt/bin/discotope\fP           executable
+.br
+\fB/usr/opt/src/discotope-1.1\fP       software home
+

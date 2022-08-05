@@ -1,0 +1,258 @@
+#! /usr/local/python/bin/python
+
+"""
+This script will read the command line arguments and 
+act as a control for the entire function.
+"""
+
+__author__ = 'Nicholas Gauthier'
+__version__ = '1.1'
+__date__ = '2006/10/03'
+
+###############################################################################
+#		GENERAL SETTINGS: CUSTOMIZE TO YOUR SITE
+###############################################################################
+
+# full path to the DiscoTope 1.1 directory (mandatory)
+DT = "/usr/cbs/bio/src/discotope-1.1/"
+
+# The getpdb script should retrieve a pdb file and output
+# it to standard out.  It must take one command line parameter
+# which is the name of the PDB entry.  If this command is 
+# not specified, automatically getting a PDB entry by name (with
+# the -list and -pdb options) will not be supported, and only
+# the -f option for specifing a pdb entry will work.
+GETPDB = "/usr/cbs/hacks/bin/getpdb"
+
+
+
+###############################################################################
+#		NOTHING SHOULD NEED CHANGING BELOW THIS LINE!
+###############################################################################
+
+
+
+import sys, os
+import StringIO
+sys.path.insert(0,DT)
+from EpitopePredictor import EpitopePredictor
+
+"""
+GLOBAL
+"""
+verbose = False
+filename = ""
+pdblist_filename = ""
+pdbName = ""
+chainsStr = ""
+threshold = -7.7
+contactDistance = 10.0
+web = False
+
+"""
+CLASSES
+"""
+
+
+"""
+METHODS
+"""
+
+# this method will print the options for the program
+def printStdUsage():
+	print "Usage: discotope [-options]\n"
+	print "where options include:"
+	print "\t-f\t\tthe pdb filename to predict on"
+	print "\t-list\t\ta file containing a list of pdb ids (one per line) with optional"
+	print "\t\t\tchain ids (ie. 1zz6, 1zz6_B, or 1zz6_A_B)"
+	print "\t-d\t\tthe contact distance in Angstroms (default is "+str(contactDistance)+")"
+	print "\t-h\t\tprint this help message"
+	print "\t-pdb\t\tthe PDB entry to lookup"
+	print "\t-chain\t\tthe chain to predict on"
+    #TODO: Allow MULTIPLE CHAIN
+	#print "\t-chains\t\tthe chain to predict on (default is the entire structure)"
+	print "\t-thr\t\tthe threshold value to be considered a epitope (default is "+str(threshold)+")"
+	print "\t-v\t\tverbose output"
+	print "\t-w\t\tif running on the web (suppresses this message)"
+
+
+# this method will lookup one pdb entry and return it
+# as a StringIO object.  If no object is found, an KeyError
+# will be raised
+def getPdbStringIO(pdbId):
+	pdbcmd = str(GETPDB + " " + pdbId)
+	pipe = os.popen(pdbcmd, "r")
+	pdbdata = pipe.read()
+	if pdbdata.strip() == "":
+		raise KeyError("Unable to find pdb id: " + pdbId)
+
+	return StringIO.StringIO(pdbdata)
+
+
+# this method will convert a string of comma-delimited
+# chainIds into an array of chainIds, or an empty array
+# if the string is empty.  It will also remove all of 
+# the whitespace around all of the chains
+def getChainIdsFromString(commaStr):
+	toReturn = []
+	if commaStr.strip() != "":
+		tmpArray = commaStr.split(",")
+		for str in tmpArray:
+			toReturn.append(str.strip())
+	return toReturn
+
+# print the output as verbose if the verbose flag is set
+# to true.  otherwise don't do anything
+def printVerbose(str):
+	if verbose == True:
+		print str
+
+
+"""
+BEGIN PROGRAM
+"""
+# begin arguments
+arguments = sys.argv[1:]
+try:
+	for i in range(len(arguments)):
+		option = arguments[i]
+		
+		if option == "-f":
+			i+=1
+			filename = arguments[i]
+		elif option == "-list":
+			i+=1
+			pdblist_filename = arguments[i]
+		elif option == "-d":
+			i+=1
+			contactDistance = float(arguments[i])
+		elif option == "-h":
+			printStdUsage()
+			sys.exit()
+		elif option == "-pdb":
+			i+=1
+			pdbName = arguments[i]
+		#TODO: Allow MULTIPLE CHAIN
+        #elif option == "-chains":
+		elif option == "-chain":
+			i+=1
+			chainsStr = arguments[i]
+		elif option == "-thr":
+			i+=1
+			threshold = float(arguments[i])
+		elif option == "-v":
+			verbose = True
+		elif option == "-w":
+			web = True
+except IndexError:
+	print "Warning! One of the options selected didn't include an argument!"
+except ValueError:
+	print "Warning! Expected a number for threshold or contact distance. Using defaults instead"
+
+
+if pdblist_filename.strip() != "" or pdbName.strip() != "":
+	if os.path.exists(GETPDB) == False:
+		print "Error! No local PDB database configured."
+		sys.exit()
+	
+
+# error check - quit if no input entries specified
+if filename.strip() == "" and pdbName.strip() == "" and pdblist_filename.strip() == "":
+	if web == False:
+		printStdUsage()
+	else:
+		print "Error! No input specified!"
+	sys.exit()
+elif filename.strip() != "" and pdbName.strip() != "":
+	print "Error! More then one input type selected. Please choose only one type of submission!!"
+	sys.exit()
+elif filename.strip() != "" and pdblist_filename.strip() != "":
+	print "Error! More then one input type selected. Please choose only one type of submission!!"
+	sys.exit()
+elif pdbName.strip() != "" and pdblist_filename.strip() != "":
+	print "Error! More then one input type selected. Please choose only one type of submission!!"
+	sys.exit()
+	
+topredict = [] # EpitopePredictor entries of proteins to predict on
+
+#get pdb file
+if pdbName.strip() != "":
+	printVerbose("START: Reading in pdb with getpdb " + pdbName)
+	try:
+		pdbStrIo = getPdbStringIO(pdbName)
+		chainsToPredict = getChainIdsFromString(chainsStr)
+		
+		#add the protein to the prediction array
+		topredict.append(EpitopePredictor(pdbName, pdbStrIo, chainsToPredict, verbose))
+		
+	except KeyError:
+		print "Error! The pdb entry '" + pdbName + "' does not exist!"
+		sys.exit()
+	printVerbose("DONE: Reading in pdb with getpdb " + pdbName)
+		
+if pdblist_filename.strip() != "":
+	printVerbose("START: Reading in a pdb list from file '" + pdblist_filename + "'")
+	try:
+		f = open(pdblist_filename)
+		for line in f:
+			pdbname_chains = line.split("_")
+			if len(pdbname_chains) > 0 and pdbname_chains[0].strip() != "":
+				try:
+					pdbStrIo = getPdbStringIO(pdbname_chains[0].strip())
+					chainsToPredict = []
+					for chain in pdbname_chains[1:]:
+						chainsToPredict.append(chain.strip())
+
+					#add the protein to the prediction array
+					topredict.append(EpitopePredictor(pdbname_chains[0].strip(), pdbStrIo, chainsToPredict, verbose))
+				except KeyError:
+					print "Warning! Unable to find the pdb entry '%s'" % pdbname_chains[0].strip()
+
+		#now cleanup the user uploaded temporary file
+		f.close()
+		if web == True:
+			os.remove(pdblist_filename) # for production
+	except IOError:
+		print "Error! Unable to find the input pdb list file!"
+		sys.exit()
+	printVerbose("DONE: Reading in a pdb list from file '" + pdblist_filename + "'")
+	
+if filename.strip() != "":
+	printVerbose("START: Reading in a pdb entry from a file '" + filename + "'")
+	try:
+		f = open(filename)
+		pdbStrIo = StringIO.StringIO(f.read())
+		chainsToPredict = getChainIdsFromString(chainsStr)
+
+		#add the protein to the prediction array
+		topredict.append(EpitopePredictor(os.path.basename(f.name), pdbStrIo, chainsToPredict, verbose))
+
+		#now cleanup the user uploaded temporary file
+		f.close()
+		if web == True:
+			os.remove(filename) #for production
+	except IOError:
+		print "Error! Unable to find the input pdb file!"
+		sys.exit()
+	printVerbose("DONE: Reading in a pdb entry from a file '" + filename + "'")
+	
+#final error check that some pdb file was found!
+if len(topredict) < 1:
+	print "Error! Unable to find any valid pdb entries to predict on...exiting!"
+	sys.exit()
+
+
+#TODO: Allow MULTIPLE CHAIN
+for ep in topredict:
+	if(len(ep.getChainsToUse()) != 1):
+		print "Error! Exactly one chain must be specified for each protein!"
+		sys.exit()
+	
+printVerbose("START: Predicting epitopes in %i pdb entries" % len(topredict))
+#At least one pdb file has been found...note it is not necessarily valid
+for ep in topredict:
+	ep.predictAntibodyEpitopes(contactDistance, threshold)
+	if ep != topredict[len(topredict)-1]:
+		print "\n*********************************************\n"
+	
+printVerbose("DONE: Predicting epitopes in %i pdb entries" % len(topredict))

@@ -1,0 +1,106 @@
+
+
+   DiscoTope 1.1	INSTALLATION INSTRUCTIONS
+
+
+   DESCRIPTION
+
+   DiscoTope predicts discontinuous B cell epitopes from pro­
+   tein three dimensional  structures.  The  method  utilizes
+   calculation  of  surface accessibility (estimated in terms
+   of contact numbers) and a novel epitope  propensity  amino
+   acid  score.  The final scores are calculated by combining
+   the propensity scores of residues in spatial proximity and
+   the  contact numbers. The method is described in detail in
+   the following article:
+
+   Prediction of residues in discontinuous B cell epitopes
+   using protein 3D structures.
+   Pernille Haste Andersen, Morten Nielsen and Ole Lund.
+   Protein Science, 15:2558-2567, 2006
+
+   Up-to-date information on the method can also be found at:
+
+       http://www.cbs.dtu.dk/services/DiscoTope/
+
+   DOWNLOAD
+
+   The  DiscoTope 1.1  package  is a  property of  Center for
+   Biological Sequence Analysis. It may be downloaded only by
+   special agreement.  For academic users there is a download
+   site at:
+
+       http://www.cbs.dtu.dk/cgi-bin/nph-sw_request?discotope
+
+   Other users are requested to contact software@cbs.dtu.dk.
+
+
+   PRE-INSTALLATION
+
+   Discotope 1.1  will run on any system that runs  Python. A
+   full installation of Biopython including 'mxTextTools' and
+   'NumericalPython' is needed.  The current version has been
+   tested under Python 2.4.
+
+   The DiscoTope 1.1 package consists of two files:
+
+       discotope-1.1.readme         this file
+       discotope-1.1.src.tar.Z      compressed TAR archive
+
+   After installation the software will occupy less than 1 Mb
+   of diskspace.
+
+
+   INSTALLATION
+
+   1. Uncompress and untar the package:
+
+        cat discotope-1.1.tar.Z | uncompress | tar xvf -
+
+      This will produce a directory 'discotope-1.1'.
+
+   2. In  the 'discotope-1.1' directory  edit the main script
+      'discotope'.
+
+      Change the first line to reflect the path to the Python
+      executable on your system.
+
+      In the part of the script marked "GENERAL SETTINGS ..."
+      the following two variables should be configured:
+
+        DT      full path to the 'discotope-1.1' directory
+	GETPDB  full path to a command line PDB browser
+
+      The PDB browser should accept commands like:
+
+        GETPDB <name>
+
+      where  '<name>' is a PDB entry name e.g. '1zz6' and the
+      output is to stdout in PDB flat file format.  If no PDB
+      browser is configured the software can still be run but
+      the options '-pdb' and '-list' will not work.
+      
+   3. In the 'discotope-1.1' directory test the software:
+
+        ./discotope -f test/1z40.pdb -chain A
+
+      The output  should be identical or very similar  to the
+      file 'test/1z40.out'.
+
+   4. a. Copy or link  the 'discotope' script  to a directory
+         in the users' path.
+      b. copy the  'discotope.1' file to  a location  in your
+         manual system.
+
+   5. Enjoy ...
+
+
+   PROBLEMS
+
+   Contact packages@cbs.dtu.dk in case of problems.
+
+   Questions on the scientific  aspects of the method  should
+   be sent to Ole Lund, lund@cbs.dtu.dk.
+
+   CBS, 5 Mar 2007
+   K. Rapacki
