@@ -40,4 +40,4 @@ Note that you should pick a host directory to mount as well as a host path in wh
 
 For example:
 
-`sudo docker run --rm -v $PWD:/discotope_in discotope:latest -f /discotope_in/discotope-1.1/test/1z40.pdb -chain A > out.txt`
+`sudo docker run --rm -v $PWD:/discotope_in discotope:latest -f /discotope_in/discotope-1.1/test/1z40.pdb -chain A > /discotope_in/out.txt`
