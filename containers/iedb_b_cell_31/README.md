@@ -33,3 +33,11 @@ sudo docker run --rm -t \
  -v /home/jupyter-pathinformatics/nikos_viral_vaccine:/iedb_io iedb-b-cell:latest \
    -m Bepipred-2.0 -f /iedb_io/sequences.txt
 ```
+
+or with a SWISSPROT ID:
+
+```
+sudo docker run --rm -t \
+ -v /home/jupyter-pathinformatics/nikos_viral_vaccine:/iedb_io iedb-b-cell:latest \
+   -m Bepipred-2.0 -s P02185
+```
