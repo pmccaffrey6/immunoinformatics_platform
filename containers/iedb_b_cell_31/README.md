@@ -21,7 +21,7 @@ Note that we just use the epidope:v0.3 container:
 Note that you should pick a host directory to mount as well as a host path in which to save the output:
 
 ```
-sudo docker run --rm -t \
+sudo docker run --rm \
  -v <HOST_FOLDER_CONTAINING_MULTIFASTA_INPUT_FILE>:/iedb_io iedb-b-cell:latest \
  -m <B_CELL_METHOD_TO_USE> -f <MULTI_FASTA_FILE>
 ```
