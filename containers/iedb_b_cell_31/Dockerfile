@@ -23,5 +23,6 @@ RUN mkdir /netsurfp && tar xzvf /netsurfp-2.0.Any.tar.gz -C /netsurfp \
   && python3.6 /netsurfp/setup.py install
 
 ENV NETSURFP_BIN=/usr/local/bin/netsurfp2
+ENV DEBIAN_FRONTEND=interactive
 
-ENTRYPOINT ['python3', '/bcell_standalone/predict_antibody_epitope.py']
+ENTRYPOINT ["python", "/bcell_standalone/predict_antibody_epitope.py"]
