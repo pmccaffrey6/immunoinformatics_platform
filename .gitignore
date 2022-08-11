@@ -1,5 +1,6 @@
 containers/container-build-items/**
 containers/*/container-build-items/*
+containers/*/*_io/*
 nextflow-workflows/workflow-scratchpad
 nextflow-workflows/*/.nextflow/*
 nextflow-workflows/*/work/*

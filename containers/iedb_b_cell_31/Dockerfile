@@ -24,5 +24,3 @@ WORKDIR /netsurfp
 RUN pip3.6 install numpy==1.19.2 scipy scikit-learn==0.19 && python3.6 /netsurfp/setup.py install
 
 ENV NETSURFP_BIN=/usr/local/bin/netsurfp2
-
-ENTRYPOINT ["python", "/bcell_standalone/predict_antibody_epitope.py"]
