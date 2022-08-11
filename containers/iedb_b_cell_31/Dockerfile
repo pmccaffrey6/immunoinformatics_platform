@@ -21,7 +21,7 @@ RUN pip install -r requirements.txt && /bin/sh configure
 
 RUN mkdir /netsurfp && tar xzvf /netsurfp-2.0.Any.tar.gz -C /netsurfp
 WORKDIR /netsurfp
-RUN pip3.6 install numpy==1.19.2 scipy sklearn && python3.6 /netsurfp/setup.py install
+RUN pip3.6 install numpy==1.19.2 scipy scikit-learn==0.19 && python3.6 /netsurfp/setup.py install
 
 ENV NETSURFP_BIN=/usr/local/bin/netsurfp2
 
