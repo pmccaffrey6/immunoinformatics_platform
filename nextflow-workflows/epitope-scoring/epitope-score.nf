@@ -5,21 +5,32 @@ params.in = "$baseDir/../workflow-scratchpad/data/alphavirus_proteins/alphavirus
 alphavirus_fasta = file(params.in)
 
 /*
- * Split a fasta file into multiple files
+ * Run Bepipred for B-cell epitope discovery on protein fasta file
  */
 process Bepipred {
 
     input:
     file alphavirus_fasta
 
-    println alphavirus_fasta.Name
+    filename =  alphavirus_fasta.Name
 
+    cmd_base = "python /bcell_standalone/predict_antibody_epitope.py -m Bepipred -f /iedb_b_cell_io/${filename} > /iedb_b_cell_io/out.txt"
+    cmd = "\"$cmd_base\""
+    println cmd
 
-    script:
+    var full_cmd =
     """
-    sudo docker run --rm \
+    docker run --rm \
      -v $baseDir/../workflow-scratchpad/data/alphavirus_proteins:/iedb_b_cell_io iedb-b-cell:latest /bin/bash -c \
-       "python /bcell_standalone/predict_antibody_epitope.py -m Bepipred -f /iedb_b_cell_io/alphavirus_protein_multiseq_test_small.fasta > /iedb_b_cell_io/out.txt"
+       $cmd
+    """
+
+    println "Running command: $full_cmd"
+
+    output:
+
+    """
+    $full_cmd
     """
 
 }
