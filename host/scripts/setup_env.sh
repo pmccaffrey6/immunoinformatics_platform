@@ -1,0 +1,2 @@
+export SINGULARITY_SIF_PATH=/home/pathinformatics/singularity_container_sif_files
+export NEXTFLOW_CONFIG_PATH=/home/pathinformatics/immunoinformatics_platform/nextflow-workflows/nextflow.config
