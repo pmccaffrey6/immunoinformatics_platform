@@ -124,3 +124,5 @@ Aug-19 00:16:51.790 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No mor
 Aug-19 00:17:43.521 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
 Aug-19 00:21:51.810 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
 Aug-19 00:22:43.529 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:26:51.843 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:27:43.577 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled

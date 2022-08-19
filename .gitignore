@@ -6,3 +6,4 @@ nextflow-workflows/*/.nextflow/*
 nextflow-workflows/*/work/*
 nextflow-workflows/*/.nextflow.log*
 *.DS_Store*
+.nextflow/*
