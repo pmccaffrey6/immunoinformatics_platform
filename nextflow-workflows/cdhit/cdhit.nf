@@ -1,4 +1,5 @@
 #!/usr/bin/env nextflow
+nextflow.enable.dsl = 2
 
 params.protein_file = '/home/pathinformatics/example_data_for_nextflow/fasta_files/proteins/alphavirus_protein_multiseq.fasta'
 protein_fasta = file(params.protein_file)
@@ -12,8 +13,6 @@ process CDHIT {
     var outfile_name = "cdhit_out_sim_${similarity_threshold_str}.txt"
 
     output:
-    path "/home/pathinformatics/example_data_for_nextflow/cdhit_outputs/$outfile_name"
-
     """
     cd-hit \
     -i /home/pathinformatics/example_data_for_nextflow/fasta_files/proteins/$protein_fasta \
@@ -23,10 +22,13 @@ process CDHIT {
 }
 
 process CDHITTOTSV {
-  input:
-  path cdhit_tsv
 
-  println cdhit_tsv
+  output:
+  """
+  python3 /cdhit_clstr_to_df.py \
+  /home/pathinformatics/example_data_for_nextflow/cdhit_outputs/$outfile_name \
+  /home/pathinformatics/example_data_for_nextflow/cdhit_outputs/cdhit_to_tsv
+  """
 
 }
 

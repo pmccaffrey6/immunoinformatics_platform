@@ -1,0 +1,126 @@
+Aug-18 22:07:15.760 [AWT-EventQueue-0] DEBUG nextflow.Session - Session uuid: b139429c-9fb3-40b1-a4d4-a66f6cc1455b
+Aug-18 22:07:15.768 [AWT-EventQueue-0] DEBUG nextflow.Session - Run name: reverent_lavoisier
+Aug-18 22:07:15.769 [AWT-EventQueue-0] DEBUG nextflow.Session - Executor pool size: 12
+Aug-18 22:07:15.816 [AWT-EventQueue-0] DEBUG nextflow.Session - Work-dir: /Users/pmccaffrey/immunoinformatics_platform/work [Mac OS X]
+Aug-18 22:07:15.832 [AWT-EventQueue-0] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Aug-18 22:07:15.851 [AWT-EventQueue-0] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Aug-18 22:07:15.887 [AWT-EventQueue-0] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Aug-18 22:07:15.937 [AWT-EventQueue-0] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 13; maxThreads: 1000
+Aug-18 22:07:16.468 [Thread-3] DEBUG nextflow.Session - Session start invoked
+Aug-18 22:07:17.009 [Thread-3] DEBUG nextflow.Session - Session await
+Aug-18 22:07:17.009 [Thread-3] DEBUG nextflow.Session - Session await > all process finished
+Aug-18 22:07:17.009 [Thread-3] DEBUG nextflow.Session - Session await > all barriers passed
+Aug-18 22:07:17.025 [Thread-3] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=0; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=0ms; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=0; peakCpus=0; peakMemory=0; ]
+Aug-18 22:07:17.067 [Thread-3] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Aug-18 22:07:17.068 [Thread-3] INFO  org.pf4j.AbstractPluginManager - Stop plugin 'nf-console@1.0.3'
+Aug-18 22:07:17.070 [Thread-3] DEBUG nextflow.plugin.BasePlugin - Plugin stopped nf-console
+Aug-18 22:07:32.866 [AWT-EventQueue-0] DEBUG nextflow.Session - Session uuid: f90a80a5-1fa1-4b6e-b192-5371f502e5f6
+Aug-18 22:07:32.866 [AWT-EventQueue-0] DEBUG nextflow.Session - Run name: angry_bhabha
+Aug-18 22:07:32.866 [AWT-EventQueue-0] DEBUG nextflow.Session - Executor pool size: 12
+Aug-18 22:07:32.866 [AWT-EventQueue-0] DEBUG nextflow.Session - Work-dir: /Users/pmccaffrey/immunoinformatics_platform/work [Mac OS X]
+Aug-18 22:07:32.867 [AWT-EventQueue-0] WARN  nextflow.executor.ExecutorFactory - Plugin manager not initialised -- Using built-in executors
+Aug-18 22:07:32.873 [AWT-EventQueue-0] DEBUG nextflow.plugin.PluginsFacade - Using Default plugins manager
+Aug-18 22:07:32.876 [AWT-EventQueue-0] INFO  org.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Aug-18 22:07:32.876 [AWT-EventQueue-0] INFO  org.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Aug-18 22:07:32.877 [AWT-EventQueue-0] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Aug-18 22:07:32.878 [AWT-EventQueue-0] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Aug-18 22:07:32.878 [AWT-EventQueue-0] DEBUG nextflow.plugin.PluginsFacade - Using Default plugins manager
+Aug-18 22:07:32.878 [AWT-EventQueue-0] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Aug-18 22:07:32.887 [Thread-5] DEBUG nextflow.Session - Session start invoked
+Aug-18 22:07:32.970 [Thread-5] DEBUG nextflow.Session - Session await
+Aug-18 22:07:32.970 [Thread-5] DEBUG nextflow.Session - Session await > all process finished
+Aug-18 22:07:32.970 [Thread-5] DEBUG nextflow.Session - Session await > all barriers passed
+Aug-18 22:07:32.971 [Thread-5] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=0; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=0ms; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=0; peakCpus=0; peakMemory=0; ]
+Aug-18 22:07:32.972 [Thread-5] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Aug-18 22:07:42.062 [AWT-EventQueue-0] DEBUG nextflow.Session - Session uuid: 2d3a271d-6d1d-4221-abd2-22dd5108da86
+Aug-18 22:07:42.062 [AWT-EventQueue-0] DEBUG nextflow.Session - Run name: adoring_avogadro
+Aug-18 22:07:42.062 [AWT-EventQueue-0] DEBUG nextflow.Session - Executor pool size: 12
+Aug-18 22:07:42.063 [AWT-EventQueue-0] DEBUG nextflow.Session - Work-dir: /Users/pmccaffrey/immunoinformatics_platform/work [Mac OS X]
+Aug-18 22:07:42.063 [AWT-EventQueue-0] WARN  nextflow.executor.ExecutorFactory - Plugin manager not initialised -- Using built-in executors
+Aug-18 22:07:42.064 [AWT-EventQueue-0] DEBUG nextflow.plugin.PluginsFacade - Using Default plugins manager
+Aug-18 22:07:42.064 [AWT-EventQueue-0] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Aug-18 22:07:42.065 [AWT-EventQueue-0] DEBUG nextflow.plugin.PluginsFacade - Using Default plugins manager
+Aug-18 22:07:42.065 [AWT-EventQueue-0] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Aug-18 22:07:42.073 [Thread-7] DEBUG nextflow.Session - Session start invoked
+Aug-18 22:07:42.130 [Thread-7] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Aug-18 22:07:42.130 [Thread-7] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Aug-18 22:07:42.135 [Thread-7] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Aug-18 22:07:42.150 [Thread-7] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=12; memory=16 GB; capacity=12; pollInterval=100ms; dumpInterval=5m
+Aug-18 22:07:42.256 [Thread-7] DEBUG nextflow.Session - Session await
+Aug-18 22:08:36.183 [AWT-EventQueue-0] DEBUG nextflow.Session - Session uuid: a991452f-0194-49a4-a879-7873ed9b0a95
+Aug-18 22:08:36.184 [AWT-EventQueue-0] DEBUG nextflow.Session - Run name: berserk_bohr
+Aug-18 22:08:36.184 [AWT-EventQueue-0] DEBUG nextflow.Session - Executor pool size: 12
+Aug-18 22:08:36.184 [AWT-EventQueue-0] DEBUG nextflow.Session - Work-dir: /Users/pmccaffrey/immunoinformatics_platform/work [Mac OS X]
+Aug-18 22:08:36.184 [AWT-EventQueue-0] WARN  nextflow.executor.ExecutorFactory - Plugin manager not initialised -- Using built-in executors
+Aug-18 22:08:36.186 [AWT-EventQueue-0] DEBUG nextflow.plugin.PluginsFacade - Using Default plugins manager
+Aug-18 22:08:36.186 [AWT-EventQueue-0] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Aug-18 22:08:36.187 [AWT-EventQueue-0] DEBUG nextflow.plugin.PluginsFacade - Using Default plugins manager
+Aug-18 22:08:36.187 [AWT-EventQueue-0] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Aug-18 22:11:50.646 [AWT-EventQueue-0] DEBUG nextflow.Session - Session uuid: 79cb825c-5cfd-4937-9ab3-99e3ac82affd
+Aug-18 22:11:50.646 [AWT-EventQueue-0] DEBUG nextflow.Session - Run name: extravagant_meucci
+Aug-18 22:11:50.646 [AWT-EventQueue-0] DEBUG nextflow.Session - Executor pool size: 12
+Aug-18 22:11:50.646 [AWT-EventQueue-0] DEBUG nextflow.Session - Work-dir: /Users/pmccaffrey/immunoinformatics_platform/work [Mac OS X]
+Aug-18 22:11:50.647 [AWT-EventQueue-0] WARN  nextflow.executor.ExecutorFactory - Plugin manager not initialised -- Using built-in executors
+Aug-18 22:11:50.648 [AWT-EventQueue-0] DEBUG nextflow.plugin.PluginsFacade - Using Default plugins manager
+Aug-18 22:11:50.648 [AWT-EventQueue-0] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Aug-18 22:11:50.648 [AWT-EventQueue-0] DEBUG nextflow.plugin.PluginsFacade - Using Default plugins manager
+Aug-18 22:11:50.648 [AWT-EventQueue-0] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Aug-18 22:11:50.654 [Thread-10] DEBUG nextflow.Session - Session start invoked
+Aug-18 22:11:50.672 [Thread-10] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Aug-18 22:11:50.673 [Thread-10] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Aug-18 22:11:50.673 [Thread-10] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Aug-18 22:11:50.673 [Thread-10] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=12; memory=16 GB; capacity=12; pollInterval=100ms; dumpInterval=5m
+Aug-18 22:11:50.675 [Thread-10] DEBUG nextflow.Session - Session await
+Aug-18 22:12:42.353 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:16:50.849 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:17:42.369 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:21:51.025 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:22:42.393 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:26:50.945 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:27:42.476 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:31:51.326 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:32:42.524 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:36:51.034 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:37:42.560 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:41:51.125 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:42:42.568 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:46:51.141 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:47:42.597 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:51:51.284 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:52:42.687 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:56:51.152 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 22:57:42.695 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:01:51.192 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:02:42.781 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:06:51.233 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:07:42.810 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:11:51.263 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:12:42.841 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:16:51.314 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:17:42.939 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:21:51.335 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:22:42.985 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:26:51.350 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:27:43.047 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:31:51.370 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:32:43.149 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:36:51.441 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:37:43.162 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:41:51.471 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:42:43.169 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:46:51.568 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:47:43.171 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:51:51.653 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:52:43.224 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:56:51.705 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-18 23:57:43.290 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:01:51.718 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:02:43.311 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:06:51.777 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:07:43.374 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:11:51.789 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:12:43.428 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:16:51.790 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:17:43.521 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:21:51.810 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
+Aug-19 00:22:43.529 [Task monitor] DEBUG n.processor.TaskPollingMonitor - No more task to compute -- Execution may be stalled
