@@ -29,6 +29,10 @@ Note that we just use the epidope:v0.3 container:
 
 `sudo docker pull epidope:v0.3`
 
+or
+
+`singularity pull docker://flomock/epidope:v0.3`
+
 ### Run Container
 
 Note that you should pick a host directory to mount as well as a host path in which to save the output:
@@ -36,7 +40,7 @@ Note that you should pick a host directory to mount as well as a host path in wh
 ```
 sudo docker run --rm \
   -v <HOST_FOLDER_CONTAINING_MULTIFASTA_INPUT_FILE>:/epidope_io flomock/epidope:v0.3 \
-  -i <MOUNTED_PATH_TO_INPUT_MULTIFASTA_FILE> -o <MOUNTED_PATH_TO_SAVE_EPIDOPE_OUTPUT>
+  -i /epidope_io/<MOUNTED_PATH_TO_INPUT_MULTIFASTA_FILE> -o <MOUNTED_PATH_TO_SAVE_EPIDOPE_OUTPUT>
 ```
 
 For example:
