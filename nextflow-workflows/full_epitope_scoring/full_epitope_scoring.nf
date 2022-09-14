@@ -98,11 +98,52 @@ process BEPIPREDTOTSV {
     """
 }
 
+process NETMHCPANI {
+    debug true
+    publishDir '/home/pathinformatics/epitope_outputs/netmhcpan_i_output'
+
+    input:
+    path protein_fasta
+
+    output:
+    path("netmhcpan_i_out.tsv"), emit: netmhcpan_i_tsv
+
+    script:
+    """
+    /bin/bash -c "sed '/^[^>]/s/[B|X|J|U]//g' $protein_fasta > cleaned.fasta \
+    && /mhc_i/src/predict_binding.py netmhcpan_ba HLA-A*02:01 9 cleaned.fasta > netmhcpan_i_out.tsv"
+    """
+}
+
+process NETMHCPANII {
+    debug true
+    publishDir '/home/pathinformatics/epitope_outputs/netmhcpan_ii_output'
+
+    input:
+    path protein_fasta
+
+    output:
+    path("netmhcpan_ii_out.tsv"), emit: netnhcpan_ii_tsv
+
+    script:
+    """
+    /bin/bash -c "sed '/^[^>]/s/[B|X|J|U]//g' $protein_fasta > cleaned.fasta \
+    && /mhc_ii/mhc_II_binding.py netmhciipan_ba HLA-DRB1*03:01 cleaned.fasta > netmhcpan_ii_out.tsv"
+    """
+}
+
 workflow {
     protein_fasta_ch = Channel.fromPath(params.protein_file)
     cdhit_out_ch = CDHIT(protein_fasta_ch, params.cdhit_similarity_threshold)
     CDHITTOTSV(cdhit_out_ch.clstr_file, params.cdhit_similarity_threshold)
+    /*    */
+    /* B-CELL SCORING */
     bepipred_out_ch = BEPIPRED(protein_fasta_ch)
     BEPIPREDTOTSV(bepipred_out_ch.bepipred_output)
+    /*EPIDOPE(protein_fasta_ch)*/
+    /*    */
+    /* T-CELL SCORING */
+    NETMHCPANI(protein_fasta_ch)
+    NETMHCPANII(protein_fasta_ch)
 
 }
