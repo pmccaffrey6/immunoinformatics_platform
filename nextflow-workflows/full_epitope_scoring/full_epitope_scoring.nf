@@ -4,6 +4,12 @@ nextflow.enable.dsl = 2
 params.protein_file = '/home/pathinformatics/example_data_for_nextflow/fasta_files/proteins/alphavirus_protein_multiseq.fasta'
 params.cdhit_similarity_threshold = 0.95
 
+params.bepipred = "no"
+params.epidope = "no"
+params.netmhcpani = "no"
+params.netmhcpanii = "no"
+params.dc_bcell = "no"
+
 process CDHIT {
     debug true
     label 'CD_HIT'
@@ -59,6 +65,7 @@ process EPIDOPE {
 
     script:
     """
+    -p 12 \
     -i $protein_fasta \
     -o epidope_output
     """
@@ -111,7 +118,10 @@ process NETMHCPANI {
     script:
     """
     /bin/bash -c "sed '/^[^>]/s/[B|X|J|U]//g' $protein_fasta > cleaned.fasta \
-    && /mhc_i/src/predict_binding.py netmhcpan_ba HLA-A*02:01 9 cleaned.fasta > netmhcpan_i_out.tsv"
+    && /mhc_i/src/predict_binding.py netmhcpan_ba \
+    HLA-A*01:01,HLA-A*02:01,HLA-A*03:01,HLA-A*24:02,HLA-A*26:01,HLA-B*07:02,HLA-B*08:01,HLA-B*15:01,HLA-B*27:05,HLA-B*39:01,HLA-B*40:01,HLA-B*58:01 \
+    9,9,9,9,9,9,9,9,9,9,9,9 \
+    cleaned.fasta > netmhcpan_i_out.tsv"
     """
 }
 
@@ -128,7 +138,9 @@ process NETMHCPANII {
     script:
     """
     /bin/bash -c "sed '/^[^>]/s/[B|X|J|U]//g' $protein_fasta > cleaned.fasta \
-    && /mhc_ii/mhc_II_binding.py netmhciipan_ba HLA-DRB1*03:01 cleaned.fasta > netmhcpan_ii_out.tsv"
+    && /mhc_ii/mhc_II_binding.py netmhciipan_ba \
+    HLA-DRB1*03:01,HLA-DRB1*07:01,HLA-DRB1*15:01,HLA-DRB3*01:01,HLA-DRB3*02:02,HLA-DRB4*01:01,HLA-DRB5*01:01 \
+    cleaned.fasta > netmhcpan_ii_out.tsv"
     """
 }
 
@@ -136,14 +148,20 @@ workflow {
     protein_fasta_ch = Channel.fromPath(params.protein_file)
     cdhit_out_ch = CDHIT(protein_fasta_ch, params.cdhit_similarity_threshold)
     CDHITTOTSV(cdhit_out_ch.clstr_file, params.cdhit_similarity_threshold)
-    /*    */
     /* B-CELL SCORING */
-    bepipred_out_ch = BEPIPRED(protein_fasta_ch)
-    BEPIPREDTOTSV(bepipred_out_ch.bepipred_output)
-    /*EPIDOPE(protein_fasta_ch)*/
-    /*    */
+    if (params.bepipred == "yes") {
+        bepipred_out_ch = BEPIPRED(protein_fasta_ch)
+        BEPIPREDTOTSV(bepipred_out_ch.bepipred_output)
+    }
+    if (params.epidope == "yes") {
+        EPIDOPE(protein_fasta_ch)
+    }
     /* T-CELL SCORING */
-    NETMHCPANI(protein_fasta_ch)
-    NETMHCPANII(protein_fasta_ch)
+    if (params.netmhcpani == "yes") {
+        NETMHCPANI(protein_fasta_ch)
+    }
+    if (params.netmhcpanii == "yes") {
+        NETMHCPANII(protein_fasta_ch)
+    }
 
 }
