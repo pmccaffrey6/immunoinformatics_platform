@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys
 from Bio import SeqIO
@@ -11,5 +11,6 @@ split_fasta_outfolder = sys.argv[2]
 
 
 for record in SeqIO.parse(multifasta_inpath, "fasta"):
-    with open(os.path.join(f"{split_fasta_outfolder}", f"{record.id}.fasta"), 'w') as splitfile:
+    outfile_name = record.id + '.fasta'
+    with open(os.path.join(split_fasta_outfolder, outfile_name), 'w') as splitfile:
         SeqIO.write(record, splitfile, "fasta")
