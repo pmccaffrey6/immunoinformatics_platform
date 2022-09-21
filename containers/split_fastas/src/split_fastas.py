@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sys
-from Bio Import SeqIO
+from Bio import SeqIO
 import os
 
 
