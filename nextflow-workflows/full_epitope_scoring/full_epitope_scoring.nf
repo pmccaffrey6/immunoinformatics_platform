@@ -146,6 +146,8 @@ process NETMHCPANII {
 
 workflow {
     protein_fasta_ch = Channel.fromPath(params.protein_file)
+    split_fastas_ch = Channel.fromPath('/home/pathinformatics/epitope_outputs/split_fastas/*')
+
     cdhit_out_ch = CDHIT(protein_fasta_ch, params.cdhit_similarity_threshold)
     CDHITTOTSV(cdhit_out_ch.clstr_file, params.cdhit_similarity_threshold)
     /* B-CELL SCORING */
