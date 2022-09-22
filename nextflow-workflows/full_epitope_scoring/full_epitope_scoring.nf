@@ -111,17 +111,18 @@ process NETMHCPANI {
 
     input:
     path protein_fasta
+    val allele
 
     output:
-    path("netmhcpan_i_out.tsv"), emit: netmhcpan_i_tsv
+    path("netmhcpan_i_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_out.tsv"), emit: netmhcpan_i_tsv
 
     script:
     """
-    /bin/bash -c "sed '/^[^>]/s/[B|X|J|U]//g' $protein_fasta > cleaned.fasta \
+    /bin/bash -c "sed '/^[^>]/s/[B|X|J|U]//g' $protein_fasta > ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta \
     && /mhc_i/src/predict_binding.py netmhcpan_ba \
-    HLA-A*01:01,HLA-A*02:01,HLA-A*03:01,HLA-A*24:02,HLA-A*26:01,HLA-B*07:02,HLA-B*08:01,HLA-B*15:01,HLA-B*27:05,HLA-B*39:01,HLA-B*40:01,HLA-B*58:01 \
-    9,9,9,9,9,9,9,9,9,9,9,9 \
-    cleaned.fasta > netmhcpan_i_out.tsv"
+    $allele 9 \
+    ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta > \
+    netmhcpan_i_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_out.tsv"
     """
 }
 
@@ -131,23 +132,30 @@ process NETMHCPANII {
 
     input:
     path protein_fasta
+    val allele
 
     output:
-    path("netmhcpan_ii_out.tsv"), emit: netnhcpan_ii_tsv
+    path("netmhcpan_ii_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_out.tsv"), emit: netmhcpan_ii_tsv
 
     script:
     """
-    /bin/bash -c "sed '/^[^>]/s/[B|X|J|U]//g' $protein_fasta > cleaned.fasta \
+    /bin/bash -c "sed '/^[^>]/s/[B|X|J|U]//g' $protein_fasta > ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta \
     && /mhc_ii/mhc_II_binding.py netmhciipan_ba \
-    HLA-DRB1*03:01,HLA-DRB1*07:01,HLA-DRB1*15:01,HLA-DRB3*01:01,HLA-DRB3*02:02,HLA-DRB4*01:01,HLA-DRB5*01:01 \
-    cleaned.fasta > netmhcpan_ii_out.tsv"
+    $allele \
+    ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta > \
+    netmhcpan_ii_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_out.tsv"
     """
 }
 
+
 workflow {
     protein_fasta_ch = Channel.fromPath(params.protein_file)
-    split_fastas_ch = Channel.fromPath('/home/pathinformatics/epitope_outputs/split_fastas/*')
+    protein_fasta_value_ch = file(params.protein_file)
+    mhc_i_alleles_ch = Channel.from('HLA-A*01:01','HLA-A*02:01','HLA-A*03:01','HLA-A*24:02','HLA-A*26:01','HLA-B*07:02','HLA-B*08:01','HLA-B*15:01','HLA-B*27:05','HLA-B*39:01','HLA-B*40:01','HLA-B*58:01')
+    mhc_ii_alleles_ch = Channel.from('HLA-DRB1*03:01','HLA-DRB1*07:01','HLA-DRB1*15:01','HLA-DRB3*01:01','HLA-DRB3*02:02','HLA-DRB4*01:01','HLA-DRB5*01:01')
 
+    /*split_fastas_ch = SPLITFASTAS(protein_fasta_ch)*/
+    split_fastas_ch = Channel.fromPath('/home/pathinformatics/epitope_outputs/split_fastas/*')
     cdhit_out_ch = CDHIT(protein_fasta_ch, params.cdhit_similarity_threshold)
     CDHITTOTSV(cdhit_out_ch.clstr_file, params.cdhit_similarity_threshold)
     /* B-CELL SCORING */
