@@ -23,7 +23,7 @@ for i,v in enumerate(steps):
     try:
         if v == 1:
             indexes.append(counter)
-            tags.append(original_array[i])
+            tags.append(prelim_epitope_residues[i])
         elif v > 1:
             counter += 1
     except IndexError:
