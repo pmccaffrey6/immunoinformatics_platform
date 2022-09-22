@@ -8,7 +8,6 @@ discotope_tsv_outfile = sys.argv[2]
 protein_name = sys.argv[3]
 
 discotope_df = pd.read_csv(discotope_infile, sep='\t', skiprows=4, names=['chain_id','residue_id','residue_name','contact_number','propensity_score','discotope_score','epitope_flag'])
-discotope_df = discotope_df[pd.notna(discotope_df['residue_id'])]
 
 
 prelim_epitope_residues = discotope_df[discotope_df['epitope_flag']=='<=B'].sort_values(by='residue_id').index.values
