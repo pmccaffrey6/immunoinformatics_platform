@@ -168,10 +168,10 @@ workflow {
     }
     /* T-CELL SCORING */
     if (params.netmhcpani == "yes") {
-        NETMHCPANI(protein_fasta_ch)
+        NETMHCPANI(protein_fasta_value_ch, mhc_i_alleles_ch)
     }
     if (params.netmhcpanii == "yes") {
-        NETMHCPANII(protein_fasta_ch)
+        NETMHCPANII(protein_fasta_value_ch, mhc_ii_alleles_ch)
     }
 
 }
