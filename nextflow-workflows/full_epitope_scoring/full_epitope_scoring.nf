@@ -1,8 +1,10 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
+/*params.protein_file = '/home/pathinformatics/example_data_for_nextflow/fasta_files/proteins/test.fasta'*/
 params.protein_file = '/home/pathinformatics/example_data_for_nextflow/fasta_files/proteins/alphavirus_protein_multiseq.fasta'
 params.cdhit_similarity_threshold = 0.95
+params.alphafold_pdb_folder = '/home/pathinformatics/epitope_outputs/alphafold_predictions/*/*.pdb'
 
 params.bepipred = "no"
 params.epidope = "no"
@@ -105,6 +107,22 @@ process BEPIPREDTOTSV {
     """
 }
 
+process DISCOTOPE {
+    debug true
+    publishDir '/home/pathinformatics/epitope_outputs/discotope_output'
+
+    input:
+    path pdb_file
+
+    output:
+    path("discotope_out.txt"), emit: discotope_out
+
+    script:
+    """
+    /discotope-1.1/discotope -f $pdb_file -chain A > discotope_out.txt
+    """
+}
+
 process NETMHCPANI {
     debug true
     publishDir '/home/pathinformatics/epitope_outputs/netmhcpan_i_output'
@@ -149,29 +167,33 @@ process NETMHCPANII {
 
 
 workflow {
-    protein_fasta_ch = Channel.fromPath(params.protein_file)
-    protein_fasta_value_ch = file(params.protein_file)
-    mhc_i_alleles_ch = Channel.from('HLA-A*01:01','HLA-A*02:01','HLA-A*03:01','HLA-A*24:02','HLA-A*26:01','HLA-B*07:02','HLA-B*08:01','HLA-B*15:01','HLA-B*27:05','HLA-B*39:01','HLA-B*40:01','HLA-B*58:01')
-    mhc_ii_alleles_ch = Channel.from('HLA-DRB1*03:01','HLA-DRB1*07:01','HLA-DRB1*15:01','HLA-DRB3*01:01','HLA-DRB3*02:02','HLA-DRB4*01:01','HLA-DRB5*01:01')
+  protein_fasta_ch = Channel.fromPath(params.protein_file)
+  protein_fasta_value_ch = file(params.protein_file)
+  alphafold_pdb_ch = Channel.fromPath(params.alphafold_pdb_folder)
 
-    /*split_fastas_ch = SPLITFASTAS(protein_fasta_ch)*/
-    split_fastas_ch = Channel.fromPath('/home/pathinformatics/epitope_outputs/split_fastas/*')
-    cdhit_out_ch = CDHIT(protein_fasta_ch, params.cdhit_similarity_threshold)
-    CDHITTOTSV(cdhit_out_ch.clstr_file, params.cdhit_similarity_threshold)
-    /* B-CELL SCORING */
-    if (params.bepipred == "yes") {
-        bepipred_out_ch = BEPIPRED(protein_fasta_ch)
-        BEPIPREDTOTSV(bepipred_out_ch.bepipred_output)
-    }
-    if (params.epidope == "yes") {
-        EPIDOPE(protein_fasta_ch)
-    }
-    /* T-CELL SCORING */
-    if (params.netmhcpani == "yes") {
-        NETMHCPANI(protein_fasta_value_ch, mhc_i_alleles_ch)
-    }
-    if (params.netmhcpanii == "yes") {
-        NETMHCPANII(protein_fasta_value_ch, mhc_ii_alleles_ch)
-    }
+  mhc_i_alleles_ch = Channel.from('HLA-A*01:01','HLA-A*02:01','HLA-A*03:01','HLA-A*24:02','HLA-A*26:01','HLA-B*07:02','HLA-B*08:01','HLA-B*15:01>
+  mhc_ii_alleles_ch = Channel.from('HLA-DRB1*03:01','HLA-DRB1*07:01','HLA-DRB1*15:01','HLA-DRB3*01:01','HLA-DRB3*02:02','HLA-DRB4*01:01','HLA-DR>
 
+  /*split_fastas_ch = SPLITFASTAS(protein_fasta_ch)*/
+  split_fastas_ch = Channel.fromPath('/home/pathinformatics/epitope_outputs/split_fastas/*')
+  cdhit_out_ch = CDHIT(protein_fasta_ch, params.cdhit_similarity_threshold)
+  CDHITTOTSV(cdhit_out_ch.clstr_file, params.cdhit_similarity_threshold)
+  /* B-CELL SCORING */
+  if (params.bepipred == "yes") {
+      bepipred_out_ch = BEPIPRED(protein_fasta_ch)
+      BEPIPREDTOTSV(bepipred_out_ch.bepipred_output)
+  }
+  if (params.epidope == "yes") {
+      EPIDOPE(protein_fasta_ch)
+  }
+  if (params.dc_bcell == "yes") {
+      discotope_out_ch = DISCOTOPE(alphafold_pdb_ch)
+  }
+  /* T-CELL SCORING */
+  if (params.netmhcpani == "yes") {
+      NETMHCPANI(protein_fasta_value_ch, mhc_i_alleles_ch)
+  }
+  if (params.netmhcpanii == "yes") {
+      NETMHCPANII(protein_fasta_value_ch, mhc_ii_alleles_ch)
+  }
 }
