@@ -64,14 +64,14 @@ process EPIDOPE {
     path protein_fasta
 
     output:
-    path("epidope_output"), emit: epidope_output
+    path("epidope_output_${protein_fasta}"), emit: epidope_output
 
     script:
     """
     epidope \
     -p 12 \
     -i $protein_fasta \
-    -o epidope_output
+    -o epidope_output_$protein_fasta
     """
 
 }
@@ -244,8 +244,11 @@ workflow {
         bepipred_out_ch = BEPIPRED(protein_fasta_ch)
         BEPIPREDTOTSV(bepipred_out_ch.bepipred_output)
     }
-    if (params.epidope == "yes") {
+    /*if (params.epidope == "yes") {
         EPIDOPE(protein_fasta_ch)
+    }*/
+    if (params.epidope == "yes") {
+        EPIDOPE(protein_fasta_ch.splitFasta(by: 500, file: true))
     }
     if (params.dc_bcell == "yes") {
         MIGRATEAF2()
