@@ -57,7 +57,8 @@ process CDHITTOTSV {
 
 process EPIDOPE {
     debug true
-    publishDir '/home/pathinformatics/epitope_outputs/'
+    label 'EPIDOPE'
+    publishDir '/home/pathinformatics/epitope_outputs/epidope_output'
 
     input:
     path protein_fasta
@@ -67,14 +68,17 @@ process EPIDOPE {
 
     script:
     """
+    epidope \
     -p 12 \
     -i $protein_fasta \
     -o epidope_output
     """
+
 }
 
 process BEPIPRED {
     debug true
+    /*publishDir '/home/pathinformatics/epitope_outputs/bepipred_output'*/
 
     input:
     path protein_fasta
@@ -107,19 +111,59 @@ process BEPIPREDTOTSV {
     """
 }
 
+process MIGRATEAF2 {
+    debug true
+
+    """
+    #!/usr/bin/python3
+    import glob
+    import os
+    import shutil
+
+    alphafold_files = glob.glob('/tmp/alphafold/*/ranked_0.pdb')
+    print("Migrating AF2 Predictions:")
+    print(",".join(alphafold_files))
+    for alphafold_file in alphafold_files:
+        protname = alphafold_file.split('/')[-2]
+        outfile = f"{protname}_ranked_0.pdb"
+        alphafold_dest_folder = os.path.join('/home','pathinformatics','epitope_outputs','alphafold_predictions',protname)
+        alphafold_dest_file = os.path.join(alphafold_dest_folder,outfile)
+        if not os.path.exists(alphafold_dest_folder):
+            os.makedirs(alphafold_dest_folder)
+        shutil.copy(alphafold_file, alphafold_dest_file)
+    """
+}
+
 process DISCOTOPE {
     debug true
-    publishDir '/home/pathinformatics/epitope_outputs/discotope_output'
+    /*publishDir '/home/pathinformatics/epitope_outputs/discotope_output'*/
 
     input:
     path pdb_file
 
     output:
-    path("discotope_out.txt"), emit: discotope_out
+    path("${pdb_file}_discotope_out.txt"), emit: discotope_out
 
     script:
     """
-    /discotope-1.1/discotope -f $pdb_file -chain A > discotope_out.txt
+    /discotope-1.1/discotope -f $pdb_file -chain A > ${pdb_file}_discotope_out.txt
+    """
+}
+
+process DISCOTOPETOTSV {
+    debug true
+    publishDir '/home/pathinformatics/epitope_outputs/discotope_output'
+
+    input:
+    path discotope_file
+
+    output:
+    path("${discotope_file}.tsv"), emit: discotope_out_tsv
+
+    script:
+    """
+    python3 /discotope_to_tsv.py \
+    $discotope_file ${discotope_file}.tsv $discotope_file
     """
 }
 
@@ -165,35 +209,54 @@ process NETMHCPANII {
     """
 }
 
+process SPLITFASTAS {
+    debug true
+    publishDir '/home/pathinformatics/epitope_outputs/split_fastas'
+
+    input:
+    path protein_fasta
+
+    output:
+    path ('split_fastas'), emit: split_fastas
+
+    script:
+    """
+    python3 /split_fastas.py \
+    $protein_fasta \
+    /home/pathinformatics/epitope_outputs/split_fastas
+    """
+}
 
 workflow {
-  protein_fasta_ch = Channel.fromPath(params.protein_file)
-  protein_fasta_value_ch = file(params.protein_file)
-  alphafold_pdb_ch = Channel.fromPath(params.alphafold_pdb_folder)
+    protein_fasta_ch = Channel.fromPath(params.protein_file)
+    protein_fasta_value_ch = file(params.protein_file)
+    alphafold_pdb_ch = Channel.fromPath(params.alphafold_pdb_folder)
 
-  mhc_i_alleles_ch = Channel.from('HLA-A*01:01','HLA-A*02:01','HLA-A*03:01','HLA-A*24:02','HLA-A*26:01','HLA-B*07:02','HLA-B*08:01','HLA-B*15:01>
-  mhc_ii_alleles_ch = Channel.from('HLA-DRB1*03:01','HLA-DRB1*07:01','HLA-DRB1*15:01','HLA-DRB3*01:01','HLA-DRB3*02:02','HLA-DRB4*01:01','HLA-DR>
+    mhc_i_alleles_ch = Channel.from('HLA-A*01:01','HLA-A*02:01','HLA-A*03:01','HLA-A*24:02','HLA-A*26:01','HLA-B*07:02','HLA-B*08:01','HLA-B*15:01','HLA-B*27:05','HLA-B*39:01','HLA-B*40:01','HLA-B*58:01')
+    mhc_ii_alleles_ch = Channel.from('HLA-DRB1*03:01','HLA-DRB1*07:01','HLA-DRB1*15:01','HLA-DRB3*01:01','HLA-DRB3*02:02','HLA-DRB4*01:01','HLA-DRB5*01:01')
 
-  /*split_fastas_ch = SPLITFASTAS(protein_fasta_ch)*/
-  split_fastas_ch = Channel.fromPath('/home/pathinformatics/epitope_outputs/split_fastas/*')
-  cdhit_out_ch = CDHIT(protein_fasta_ch, params.cdhit_similarity_threshold)
-  CDHITTOTSV(cdhit_out_ch.clstr_file, params.cdhit_similarity_threshold)
-  /* B-CELL SCORING */
-  if (params.bepipred == "yes") {
-      bepipred_out_ch = BEPIPRED(protein_fasta_ch)
-      BEPIPREDTOTSV(bepipred_out_ch.bepipred_output)
-  }
-  if (params.epidope == "yes") {
-      EPIDOPE(protein_fasta_ch)
-  }
-  if (params.dc_bcell == "yes") {
-      discotope_out_ch = DISCOTOPE(alphafold_pdb_ch)
-  }
-  /* T-CELL SCORING */
-  if (params.netmhcpani == "yes") {
-      NETMHCPANI(protein_fasta_value_ch, mhc_i_alleles_ch)
-  }
-  if (params.netmhcpanii == "yes") {
-      NETMHCPANII(protein_fasta_value_ch, mhc_ii_alleles_ch)
-  }
+    /*split_fastas_ch = SPLITFASTAS(protein_fasta_ch)*/
+    split_fastas_ch = Channel.fromPath('/home/pathinformatics/epitope_outputs/split_fastas/*')
+    cdhit_out_ch = CDHIT(protein_fasta_ch, params.cdhit_similarity_threshold)
+    CDHITTOTSV(cdhit_out_ch.clstr_file, params.cdhit_similarity_threshold)
+    /* B-CELL SCORING */
+    if (params.bepipred == "yes") {
+        bepipred_out_ch = BEPIPRED(protein_fasta_ch)
+        BEPIPREDTOTSV(bepipred_out_ch.bepipred_output)
+    }
+    if (params.epidope == "yes") {
+        EPIDOPE(protein_fasta_ch)
+    }
+    if (params.dc_bcell == "yes") {
+        MIGRATEAF2()
+        discotope_out_ch = DISCOTOPE(alphafold_pdb_ch)
+        DISCOTOPETOTSV(discotope_out_ch)
+    }
+    /* T-CELL SCORING */
+    if (params.netmhcpani == "yes") {
+        NETMHCPANI(protein_fasta_value_ch, mhc_i_alleles_ch)
+    }
+    if (params.netmhcpanii == "yes") {
+        NETMHCPANII(protein_fasta_value_ch, mhc_ii_alleles_ch)
+    }
 }
