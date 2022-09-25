@@ -8,12 +8,13 @@ params.epitope_output_folder = '/home/pathinformatics/epitope_outputs'
 params.cdhit_similarity_threshold = 0.95
 params.alphafold_pdb_folder = '/home/pathinformatics/epitope_outputs/alphafold_predictions/*/*.pdb'
 
-params.cdhit = "no"
+params.cdhit_input_proteins = "no"
 params.bepipred = "no"
 params.epidope = "no"
 params.netmhcpani = "no"
 params.netmhcpanii = "no"
 params.dc_bcell = "no"
+params.consolidate_epitopes = "no"
 
 process CDHIT {
     debug true
@@ -34,7 +35,11 @@ process CDHIT {
     cd-hit \
     -i $protein_fasta \
     -o cdhit_output.$similarity_threshold \
-    -c $similarity_threshold
+    -c $similarity_threshold \
+    -l 5 \
+    -T 12 \
+    -g 1 \
+    -aS 0.9
     """
 }
 
@@ -231,7 +236,9 @@ process SPLITFASTAS {
 
 process CONSOLIDATEEPITOPES {
     debug true
-    /*publisDir "${params.epitope_output_folder}/consolidated_epitopes"*/
+
+    output:
+    val 1
 
     script:
     """
@@ -242,32 +249,40 @@ process CONSOLIDATEEPITOPES {
     from Bio import SeqIO
     from Bio.Seq import Seq
     from Bio.SeqRecord import SeqRecord
+    from multiprocessing import Pool
 
     epitope_paths = glob.glob("${params.epitope_output_folder}/*")
     # Consolidate from Epidope
+    print("Consolidating Epidope")
     epidope_output_files = glob.glob("${params.epitope_output_folder}/epidope_output/epidope_output*/predicted_epitopes.csv")
     epidope_df = pd.concat([pd.read_csv(file, sep='\t') for file in epidope_output_files])[["#Gene_ID","sequence","score"]].drop_duplicates()
     ##[["#Gene_ID","sequence"]]
     epidope_df.rename(columns={"#Gene_ID":"protein_id","score":"epidope_score"}, inplace=True)
     epidope_df["type"] = "epidope"
+    print(f"Epidope Table Size: {epidope_df.shape}")
 
     # Consolidate from Bepipred
+    print("Consolidating Bepipred")
     bepipred_output_files = glob.glob("${params.epitope_output_folder}/bepipred_output/*.tsv")
     bepipred_df = pd.concat([pd.read_csv(file, sep='\t') for file in bepipred_output_files])[["Peptipe","protein_id"]].drop_duplicates()
     ##[["Peptide","protein_id"]]
     bepipred_df.rename(columns={"Peptipe":"sequence"}, inplace=True)
     bepipred_df["type"] = "bepipred"
     bepipred_df["bepipred_score"] = 1
+    print(f"Bepipred Table Size: {bepipred_df.shape}")
 
     # Consolidate from Discotope
+    print("Consolidating Discotope")
     discotope_files = glob.glob("${params.epitope_output_folder}/discotope_output/*.tsv")
     discotope_df = pd.concat([pd.read_csv(file, sep='\t') for file in discotope_files])[["mean_score","sequence","protein_name"]].drop_duplicates()
     discotope_df["protein_name"] = [i.split("_ranked")[0] for i in discotope_df["protein_name"].values]
     ##[["sequence","protein_name"]]
     discotope_df.rename(columns={"protein_name":"protein_id"}, inplace=True)
     discotope_df["type"] = "discotope"
+    print(f"Discotope Table Size: {discotope_df.shape}")
 
     # Consolidate from NetMHCIPan
+    print("Consolidating NetMHCPAN I")
     netmhcpan_i_files = glob.glob("${params.epitope_output_folder}/netmhcpan_i_output/*.tsv")
     netmhcpan_i_df = pd.concat([pd.read_csv(file, sep='\t') for file in netmhcpan_i_files])
     netmhcpan_i_df["protein_id"] = "prot1234"
@@ -275,8 +290,10 @@ process CONSOLIDATEEPITOPES {
     ##[["peptide","proteinid"]]
     netmhcpan_i_df.rename(columns={"peptide":"sequence","ic50":"netmhcpan_i_ic50","rank":"netmhcpan_i_rank"}, inplace=True)
     netmhcpan_i_df["type"] = "netmhcpan_i"
+    print(f"NetMHCPAN I Table Size: {netmhcpan_i_df.shape}")
 
     # Consolidate from NetMHCIIPan
+    print("Consolidating NetMHCPAN II")
     netmhcpan_ii_files = glob.glob("${params.epitope_output_folder}/netmhcpan_ii_output/*.tsv")
     netmhcpan_ii_df = pd.concat([pd.read_csv(file, sep='\t') for file in netmhcpan_ii_files])
     netmhcpan_ii_df["protein_id"] = "prot1234"
@@ -284,29 +301,50 @@ process CONSOLIDATEEPITOPES {
     ##[["peptide","protein_id"]]
     netmhcpan_ii_df.rename(columns={"peptide":"sequence","ic50":"netmhcpan_ii_ic50","percentile_rank":"netmhcpan_ii_rank"}, inplace=True)
     netmhcpan_ii_df["type"] = "netmhcpan_ii"
+    print(f"NetMHCPAN II Table Size: {netmhcpan_ii_df.shape}")
+
+    # Consolidate Outputs
+    all_concat_df_outdir = "${params.epitope_output_folder}/consolidated_outputs"
+    if not os.path.exists(all_concat_df_outdir):
+        os.makedirs(all_concat_df_outdir)
 
     # Create consolidated FASTA
     dfs = [epidope_df, bepipred_df, discotope_df, netmhcpan_i_df, netmhcpan_ii_df]
-    sequence_records = []
-    for df in dfs:
-        for idx, row in df[["protein_id","sequence"]].drop_duplicates().iterrows():
-            sequence_records.append(SeqRecord(seq=Seq(row["sequence"]), id=row["protein_id"]))
 
-    print(sequence_records)
-    all_concat_df_outdir = "${params.epitope_output_folder}/consolidated_outputs"
-    if not os.path.exists(all_concat_df_outdir):
-        os.makedirs(all_concat_df_outdir)
-    with open(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_epitopes.fasta", 'w') as df_fasta_outfile:
-        SeqIO.write(sequence_records, df_fasta_outfile, "fasta")
+    def create_fasta_from_df(df):
+        sequence_records = []
+        df_type = df["type"].values[0]
+        for idx, row in df[["protein_id","sequence"]].drop_duplicates().iterrows():
+            sequence_records.append(SeqRecord(seq=Seq(str(row["sequence"])), id=str(row["sequence"])))
+
+        with open(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_epitopes_{df_type}.fasta", 'w') as df_fasta_outfile:
+            SeqIO.write(sequence_records, df_fasta_outfile, "fasta")
+
+    with Pool(len(dfs)) as p:
+        p.map(create_fasta_from_df, dfs)
 
     # Consolidate all dfs together
-    all_concat_df = pd.concat([epidope_df, bepipred_df, discotope_df, netmhcpan_i_df, netmhcpan_ii_df])
-    print(f"concatenated DF created of shape {all_concat_df.shape}")
-    all_concat_df_outdir = "${params.epitope_output_folder}/consolidated_outputs"
-    if not os.path.exists(all_concat_df_outdir):
-        os.makedirs(all_concat_df_outdir)
-    all_concat_df.to_csv("${params.epitope_output_folder}/consolidated_outputs/consolidated_outputs.tsv", sep='\t')
+    for df in [epidope_df, bepipred_df, discotope_df, netmhcpan_i_df, netmhcpan_ii_df]:
+        df_type = df["type"].values[0]
+        df.to_csv(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_outputs_{df_type}.tsv", sep='\t')
     """
+}
+
+process GATHEREPITOPEFASTAS {
+    debug true
+
+    input:
+    val consolidated_output
+
+    output:
+    path("all_consolidated_epitopes.fasta"), emit: gathered_epitopes_fasta
+
+    script:
+    """
+    cat ${params.epitope_output_folder}/consolidated_outputs/consolidated_epitopes*.fasta > \
+    all_consolidated_epitopes.fasta
+    """
+
 }
 
 workflow {
@@ -321,7 +359,7 @@ workflow {
     split_fastas_ch = Channel.fromPath('/home/pathinformatics/epitope_outputs/split_fastas/*')
 
     /* CDHIT INPUT PROTEINS */
-    if (params.cdhit == "yes") {
+    if (params.cdhit_input_proteins == "yes") {
         cdhit_out_ch = CDHIT(protein_fasta_ch, params.cdhit_similarity_threshold)
         CDHITTOTSV(cdhit_out_ch.clstr_file, params.cdhit_similarity_threshold, "input_proteins")
     }
@@ -349,5 +387,11 @@ workflow {
         NETMHCPANII(protein_fasta_value_ch, mhc_ii_alleles_ch)
     }
 
-    CONSOLIDATEEPITOPES()
+    if (params.consolidate_epitopes == "yes") {
+        consolidated_epitopes_output_ch = CONSOLIDATEEPITOPES()
+        consolidated_epitopes_fasta_ch = GATHEREPITOPEFASTAS(consolidated_epitopes_output_ch)
+
+        cdhit_epitopes_out_ch = CDHIT(consolidated_epitopes_fasta_ch, params.cdhit_similarity_threshold)
+        CDHITTOTSV(cdhit_epitopes_out_ch.clstr_file, params.cdhit_similarity_threshold, "epitopes")
+    }
 }
