@@ -8,6 +8,8 @@ params.epitope_output_folder = '/home/pathinformatics/epitope_outputs'
 params.cdhit_similarity_threshold = 0.95
 params.alphafold_pdb_folder = '/home/pathinformatics/epitope_outputs/alphafold_predictions/*/*.pdb'
 
+params.netmhcpan_chunk_size = 500
+
 params.cdhit_input_proteins = "no"
 params.bepipred = "no"
 params.epidope = "no"
@@ -39,7 +41,9 @@ process CDHIT {
     -l 5 \
     -T 12 \
     -g 1 \
-    -aS 0.9
+    -aS 0.9 \
+    -uS 0.1 \
+    -d 200
     """
 }
 
@@ -174,7 +178,7 @@ process DISCOTOPETOTSV {
     """
 }
 
-process NETMHCPANI {
+process NETMHCPANIIEDB {
     debug true
     publishDir "${params.epitope_output_folder}/netmhcpan_i_output"
 
@@ -195,7 +199,34 @@ process NETMHCPANI {
     """
 }
 
-process NETMHCPANII {
+process NETMHCPANI {
+    debug true
+    publishDir "${params.epitope_output_folder}/netmhcpan_i_output"
+
+    input:
+    path protein_fasta
+    val allele
+
+    output:
+    path("netmhcpan_i_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_out.xls"), emit: netmhcpan_i_xls
+
+    script:
+    """
+    /bin/bash -c "sed '/^[^>]/s/[B|X|J|U]//g' $protein_fasta > ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta \
+    && export NETMHCpan=/netMHCpan-4.1/Linux_x86_64/ \
+    && export TMPDIR=$HOME \
+    && /netMHCpan-4.1/Linux_x86_64/bin/netMHCpan \
+    -BA \
+    -xls \
+    -a $allele \
+    -l 9 \
+    -v \
+    -f ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta \
+    -xlsfile netmhcpan_i_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_out.xls"
+    """
+}
+
+process NETMHCPANIIIEDB {
     debug true
     publishDir "${params.epitope_output_folder}/netmhcpan_ii_output"
 
@@ -213,6 +244,34 @@ process NETMHCPANII {
     $allele \
     ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta > \
     netmhcpan_ii_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_out.tsv"
+    """
+}
+
+process NETMHCPANII {
+    debug true
+    publishDir "${params.epitope_output_folder}/netmhcpan_ii_output"
+
+    input:
+    each protein_fasta
+    /*path protein_fasta*/
+    val allele
+
+    output:
+    path("netmhcpan_ii_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_${protein_fasta.getName()}_out.xls"), emit: netmhcpan_ii_xls
+
+    script:
+    """
+    /bin/bash -c "sed '/^[^>]/s/[B|X|J|U]//g' $protein_fasta > ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta \
+    && export NETMHCIIpan=/netMHCIIpan-4.1 \
+    && export TMPDIR=$HOME \
+    && /netMHCIIpan-4.1/netMHCIIpan \
+    -BA \
+    -xls \
+    -a $allele \
+    -length 15 \
+    -v \
+    -f ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta \
+    -xlsfile netmhcpan_ii_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_${protein_fasta.getName()}_out.xls"
     """
 }
 
@@ -283,24 +342,38 @@ process CONSOLIDATEEPITOPES {
 
     # Consolidate from NetMHCIPan
     print("Consolidating NetMHCPAN I")
-    netmhcpan_i_files = glob.glob("${params.epitope_output_folder}/netmhcpan_i_output/*.tsv")
-    netmhcpan_i_df = pd.concat([pd.read_csv(file, sep='\t') for file in netmhcpan_i_files])
-    netmhcpan_i_df["protein_id"] = "prot1234"
-    netmhcpan_i_df = netmhcpan_i_df[["peptide","protein_id","allele","ic50","rank"]].drop_duplicates()
+    netmhcpan_i_files = glob.glob("${params.epitope_output_folder}/netmhcpan_i_output/*.xls")
+    netmhcpan_i_dfs = []
+    for file in netmhcpan_i_files:
+        df = pd.read_csv(file, sep='\t', skiprows=1)
+        df_for_col = pd.read_csv(file, sep='\t')
+        df["allele"] = df_for_col.columns[-1]
+        netmhcpan_i_dfs.append(df)
+    netmhcpan_i_df = pd.concat(netmhcpan_i_dfs)
+    netmhcpan_i_df.rename(columns={"ID":"protein_id"}, inplace=True)
+    netmhcpan_i_df = netmhcpan_i_df[["Peptide","protein_id","allele","EL-score","EL_Rank","BA-score","BA_Rank","Ave","NB"]].drop_duplicates()
     ##[["peptide","proteinid"]]
-    netmhcpan_i_df.rename(columns={"peptide":"sequence","ic50":"netmhcpan_i_ic50","rank":"netmhcpan_i_rank"}, inplace=True)
+    netmhcpan_i_df.rename(columns={"Peptide":"sequence","EL-score":"netmhcpan_i_el_score","EL_Rank":"netmhcpan_i_el_rank","BA-score":"netmhcpan_i_ba_score","BA_Rank":"netmhcpan_i_ba_rank","Ave":"netmhcpan_i_ave","NB":"netmhcpan_i_nb"}, inplace=True)
     netmhcpan_i_df["type"] = "netmhcpan_i"
+    netmhcpan_i_df.to_feather("${params.epitope_output_folder}/netmhcpan_i_output/all_netmhcpan_i.feather")
     print(f"NetMHCPAN I Table Size: {netmhcpan_i_df.shape}")
 
     # Consolidate from NetMHCIIPan
     print("Consolidating NetMHCPAN II")
-    netmhcpan_ii_files = glob.glob("${params.epitope_output_folder}/netmhcpan_ii_output/*.tsv")
-    netmhcpan_ii_df = pd.concat([pd.read_csv(file, sep='\t') for file in netmhcpan_ii_files])
-    netmhcpan_ii_df["protein_id"] = "prot1234"
-    netmhcpan_ii_df = netmhcpan_ii_df[["peptide","protein_id","allele","ic50","percentile_rank"]].drop_duplicates()
+    netmhcpan_ii_files = glob.glob("${params.epitope_output_folder}/netmhcpan_ii_output/*.xls")
+    netmhcpan_ii_dfs = []
+    for file in netmhcpan_ii_files:
+        df = pd.read_csv(file, sep='\t', skiprows=1)
+        df_for_col = pd.read_csv(file, sep='\t')
+        df["allele"] = df_for_col.columns[-1]
+        netmhcpan_ii_dfs.append(df)
+    netmhcpan_ii_df = pd.concat(netmhcpan_ii_dfs)
+    netmhcpan_ii_df.rename(columns={"ID":"protein_id"}, inplace=True)
+    netmhcpan_ii_df = netmhcpan_ii_df[["Peptide","protein_id","allele","Score","Rank","Score_BA","Rank_BA","Ave","NB"]].drop_duplicates()
     ##[["peptide","protein_id"]]
-    netmhcpan_ii_df.rename(columns={"peptide":"sequence","ic50":"netmhcpan_ii_ic50","percentile_rank":"netmhcpan_ii_rank"}, inplace=True)
+    netmhcpan_ii_df.rename(columns={"Peptide":"sequence","Score":"netmhcpan_ii_el_score","Rank":"netmhcpan_ii_el_rank","Score_BA":"netmhcpan_ii_ba_score","Rank_BA":"netmhcpan_ii_ba_rank","Ave":"netmhcpan_ii_ave","NB":"netmhcpan_ii_nb"}, inplace=True)
     netmhcpan_ii_df["type"] = "netmhcpan_ii"
+    netmhcpan_ii_df.to_feather("${params.epitope_output_folder}/netmhcpan_ii_output/all_netmhcpan_ii.feather")
     print(f"NetMHCPAN II Table Size: {netmhcpan_ii_df.shape}")
 
     # Consolidate Outputs
@@ -311,21 +384,27 @@ process CONSOLIDATEEPITOPES {
     # Create consolidated FASTA
     dfs = [epidope_df, bepipred_df, discotope_df, netmhcpan_i_df, netmhcpan_ii_df]
 
-    def create_fasta_from_df(df):
+    def create_fasta_and_txt_from_df(df):
+        txt_lines = []
         sequence_records = []
         df_type = df["type"].values[0]
-        for idx, row in df[["protein_id","sequence"]].drop_duplicates().iterrows():
-            sequence_records.append(SeqRecord(seq=Seq(str(row["sequence"])), id=str(row["sequence"])))
+        for idx, row in df[(pd.notna(df["sequence"]))][["protein_id","sequence"]].drop_duplicates().iterrows():
+            sequence_records.append(SeqRecord(seq=Seq(str(row["sequence"])), id=str(row["sequence"]), description=str(df_type)))
+            txt_lines.append(str(row["sequence"]))
 
         with open(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_epitopes_{df_type}.fasta", 'w') as df_fasta_outfile:
             SeqIO.write(sequence_records, df_fasta_outfile, "fasta")
 
+        with open(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_epitopes_{df_type}.txt", 'w') as txt_outfile:
+            txt_outfile.writelines("\\n".join(txt_lines))
+
     with Pool(len(dfs)) as p:
-        p.map(create_fasta_from_df, dfs)
+        p.map(create_fasta_and_txt_from_df, dfs)
 
     # Consolidate all dfs together
     for df in [epidope_df, bepipred_df, discotope_df, netmhcpan_i_df, netmhcpan_ii_df]:
         df_type = df["type"].values[0]
+        df.to_feather(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_outputs_{df_type}.feather", sep='\t')
         df.to_csv(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_outputs_{df_type}.tsv", sep='\t')
     """
 }
@@ -350,10 +429,13 @@ process GATHEREPITOPEFASTAS {
 workflow {
     protein_fasta_ch = Channel.fromPath(params.protein_file)
     protein_fasta_value_ch = file(params.protein_file)
+    protein_fasta_splits_value_ch = Channel.fromPath(protein_fasta_value_ch).splitFasta(by: params.netmhcpan_chunk_size, file: true).collect()
+
+
     alphafold_pdb_ch = Channel.fromPath(params.alphafold_pdb_folder)
 
-    mhc_i_alleles_ch = Channel.from('HLA-A*01:01','HLA-A*02:01','HLA-A*03:01','HLA-A*24:02','HLA-A*26:01','HLA-B*07:02','HLA-B*08:01','HLA-B*15:01','HLA-B*27:05','HLA-B*39:01','HLA-B*40:01','HLA-B*58:01')
-    mhc_ii_alleles_ch = Channel.from('HLA-DRB1*03:01','HLA-DRB1*07:01','HLA-DRB1*15:01','HLA-DRB3*01:01','HLA-DRB3*02:02','HLA-DRB4*01:01','HLA-DRB5*01:01')
+    mhc_i_alleles_ch = Channel.from('HLA-A01:01','HLA-A02:01','HLA-A03:01','HLA-A24:02','HLA-A26:01','HLA-B07:02','HLA-B08:01','HLA-B15:01','HLA-B27:05','HLA-B39:01','HLA-B40:01','HLA-B58:01')
+    mhc_ii_alleles_ch = Channel.from('DRB1_0301','DRB1_0701','DRB1_1501','DRB3_0101','DRB3_0202','DRB4_0101','DRB5_0101')
 
     /*split_fastas_ch = SPLITFASTAS(protein_fasta_ch)*/
     split_fastas_ch = Channel.fromPath('/home/pathinformatics/epitope_outputs/split_fastas/*')
@@ -384,7 +466,7 @@ workflow {
         NETMHCPANI(protein_fasta_value_ch, mhc_i_alleles_ch)
     }
     if (params.netmhcpanii == "yes") {
-        NETMHCPANII(protein_fasta_value_ch, mhc_ii_alleles_ch)
+        NETMHCPANII(protein_fasta_splits_value_ch, mhc_ii_alleles_ch)
     }
 
     if (params.consolidate_epitopes == "yes") {
