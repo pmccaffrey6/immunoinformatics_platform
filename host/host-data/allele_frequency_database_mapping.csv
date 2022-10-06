@@ -1,0 +1,216 @@
+﻿id,name,locii,country,sample size,region,date added
+3326,Albania pop 2,A B C DQB1 DRB1,Albania,432,Europe,1/23/17
+3682,Bolivia La Paz Aymaras,A B DQB1 DRB1,Bolivia,87,South and Central America,4/12/20
+3686,Bolivia Quechua,A B DQB1 DRB1,Bolivia,69,South and Central America,4/28/20
+3706,Bolivia/Chile Aymara NA-DHS_13 (G),A B C DRB1,Bolivia,20,South and Central America,6/6/20
+3707,Bolivia/Peru Quechua NA-DHS_12 (G),A B C DRB1,Bolivia,21,South and Central America,7/10/20
+3618,Brazil Paraná Caucasian,A B DQA1 DQB1 DRB1,Brazil,641,South and Central America,5/16/19
+3683,Brazil Puyanawa,A B C DQA1 DQB1 DRB1,Brazil,150,South and Central America,8/20/20
+3731,Brazil Barra Mansa Rio State Black,A B C DPA1 DPB1 DQB1 DRB1,Brazil,73,South and Central America,10/20/20
+3729,Brazil Barra Mansa Rio State Caucasian,A B C DPA1 DPB1 DQB1 DRB1,Brazil,405,South and Central America,10/20/20
+3766,Brazil Para Cord Blood Unit,,Brazil,841,South and Central America,2/9/22
+3772,Brazil Para State,A B DRB1,Brazil,5000,South and Central America,4/3/22
+3727,Brazil Rio de Janeiro Black,A B C DPA1 DPB1 DQB1 DRB1,Brazil,68,South and Central America,10/20/20
+3730,Brazil Rio de Janeiro Caucasian,A B C DPA1 DPB1 DQB1 DRB1,Brazil,521,South and Central America,10/20/20
+3728,Brazil Rio de Janeiro Parda,A B C DPA1 DPB1 DQB1 DRB1,Brazil,170,South and Central America,10/20/20
+3599,Brazil South East Cord Blood,A B DRB1,Brazil,11409,South and Central America,8/18/20
+3327,Brazil Vale do Ribeira Quilombos,A B C DRB1,Brazil,144,South and Central America,9/9/19
+3715,Canada Chipewyan NA-DHS_2 (G),A B C DRB1,Canada,25,North America,7/10/20
+3714,Canada Cree NA-DHS_3 (G),A B C DRB1,Canada,18,North America,7/10/20
+3713,Canada Ojibwa NA-DHS_4 (G),A B C DRB1,Canada,16,North America,6/6/20
+3695,Chile Huilliche NA-DHS_14 (G),A B C DRB1,Chile,20,South and Central America,6/6/20
+3614,Chile Mapuche,A B DQB1 DRB1,Chile,66,South and Central America,2/6/20
+3354,Chile Santiago,A B DRB1,Chile,920,South and Central America,10/20/20
+3569,China Inner Mongolia Autonomous Region Northeast,DPB1 DQB1 DRB1,China,496,South-East Asia,6/5/19
+3705,Colombia Arhuaco NA-DHS_16 (G),A B C DRB1,Colombia,17,South and Central America,9/9/20
+3412,Colombia Barranquilla,A B DRB1,Colombia,188,South and Central America,5/21/18
+3604,Colombia Bogotá Cord Blood,A B C DQB1 DRB1,Colombia,1463,South and Central America,3/29/19
+3702,Colombia Embera NA-DHS_19 (G),A B C DRB1,Colombia,14,South and Central America,9/9/20
+3696,Colombia Inga NA-DHS_11 (G),A B C DRB1,Colombia,16,South and Central America,9/9/20
+3704,Colombia Kogi NA-DHS_17 (G),A B C DRB1,Colombia,15,South and Central America,9/9/20
+3426,Colombia North Chimila Amerindians,A B C DQB1 DRB1,Colombia,47,South and Central America,5/21/18
+3433,Colombia North Wiwa El Encanto,A B C DQB1 DRB1,Colombia,52,South and Central America,5/21/18
+3453,Colombia San Basilio de Palenque,A B DQB1 DRB1,Colombia,42,South and Central America,1/9/19
+3701,Colombia Waunana NA-DHS_20 (G),A B C DRB1,Colombia,20,South and Central America,9/9/20
+3567,Colombia Wayu from Guajira Peninsula,A B DQB1 DRB1,Colombia,48,South and Central America,11/23/18
+3693,Colombia Wayuu NA-DHS_15 (G),A B C DRB1,Colombia,15,South and Central America,9/9/20
+3703,Colombia Zenu NA-DHS_18 (G),A B C DRB1,Colombia,16,South and Central America,9/9/20
+3700,Colombia/Brazil Ticuna Arara NA-DHS_21 (G),A B C DRB1,Colombia,17,South and Central America,6/6/20
+3699,Colombia/Brazil Ticuna Tarapaca NA-DHS_22 (G),A B C DRB1,Colombia,19,South and Central America,6/6/20
+3607,Costa Rica African -Caribbean (G),A B C DRB1,Costa Rica,102,South and Central America,9/25/19
+3608,Costa Rica Amerindians (G),A B C DRB1,Costa Rica,125,South and Central America,9/25/19
+3709,Costa Rica Cabecar NA-DHS_9 (G),A B C DRB1,Costa Rica,19,South and Central America,6/6/20
+3606,Costa Rica Central Valley Mestizo (G),A B C DQB1 DRB1,Costa Rica,221,South and Central America,9/26/19
+3609,Costa Rica Guanacaste Mestizo (G),A B C DRB1,Costa Rica,110,South and Central America,9/25/19
+3708,Costa Rica Guaymi NA-DHS_10 (G),A B C DRB1,Costa Rica,18,South and Central America,6/6/20
+3321,Czech Republic pop 3,DQA1 DQB1 DRB1,Czech Republic,180,Europe,11/15/16
+3401,Ecuador Amazonia Mixed Ancestry,A B DQB1 DRB1,Ecuador,39,South and Central America,10/12/17
+3418,Ecuador Amerindians,A G,Ecuador,63,South and Central America,5/21/18
+3410,Ecuador Andes Mixed Ancestry,A B DQB1 DRB1,Ecuador,824,South and Central America,10/12/17
+3400,Ecuador Coast Mixed Ancestry,A B DQB1 DRB1,Ecuador,238,South and Central America,10/12/17
+3411,Ecuador Mixed Ancestry,A B DQB1 DRB1,Ecuador,1173,South and Central America,10/12/17
+3392,England Blood Donors of Mixed Ethnicity,A B C,England,519,Europe,7/10/20
+3664,Gaza,A B C DRB1,Gaza,42,Western Asia,10/25/19
+3775,Georgia Caucasus Tbilisi,DQB1 DRB1,Georgia,119,Western Asia,7/23/22
+3710,Guatemala Kaqchikel NA-DHS_8 (G),A B C DRB1,Guatemala,19,South and Central America,6/6/20
+3357,Hong Kong Chinese BMDR,A B C DRB1,Hong Kong,7595,South-East Asia,1/23/17
+3358,Hong Kong Chinese cord blood registry,A B DRB1,Hong Kong,3892,South-East Asia,1/23/17
+3724,Hong Kong Chinese HKBMDR HLA 11 loci,A B C DPA1 DPB1 DQA1 DQB1 DRB1,Hong Kong,5266,South-East Asia,8/9/20
+3667,Hong Kong Chinese HKBMDR. DQ and DP,DPA1 DPB1 DQA1 DQB1,Hong Kong,1064,South-East Asia,12/16/19
+3434,India Andhra Pradesh Telugu Speaking,A B C DQB1 DRB1,India,186,South Asia,4/25/19
+3720,India sub-Himalayan West Bengal Kami,A B DRB1,India,158,South Asia,6/14/20
+3432,India Tamil Nadu,A B C DQB1 DRB1,India,2492,South Asia,4/6/18
+3662,Iran Gorgan,A B C DQB1 DRB1,Iran,64,Western Asia,10/30/19
+3661,Iran pop 4,A B C DRB1,Iran,855,Western Asia,9/19/19
+3774,Iran Saqqez-Baneh Kurds,A B DQB1 DRB1,Iran,60,Western Asia,7/25/22
+3771,Iran Tabriz Azeris,A B DQB1 DRB1,Iran,97,Western Asia,4/6/22
+3680,Iraq Arabs,A B DQB1 DRB1,Iraq,149,Western Asia,3/23/20
+1243,Ireland Northern,A B C DRB1,Ireland Northern,1000,Europe,2/8/16
+3371,Italy East Sicily,A B C,Italy,50,Europe,4/28/17
+3398,Italy Lombardy,A B DRB1,Italy,674,Europe,10/20/20
+3393,"Kenya, Nyanza Province, Luo tribe",A B C DPB1 DQA1 DQB1 DRB1,Kenya,100,Sub-Saharan Africa,4/28/17
+3612,Macedonia MBMDR - Albanian,A B C DRB1,Macedonia,128,Europe,4/11/19
+3613,Macedonia MBMDR - Macedonian,A B C DRB1,Macedonia,1283,Europe,4/11/19
+3611,Macedonia MBMDR - Macedonian Muslims,A B C DRB1,Macedonia,76,Europe,4/11/19
+3424,Malaysia Champa,A B DRB1,Malaysia,29,South-East Asia,10/31/18
+3350,Malaysia Kedah Kensiu,A B DRB1,Malaysia,21,South-East Asia,1/23/17
+3438,Malaysia Kelantan,A B DRB1,Malaysia,28,South-East Asia,10/31/18
+3439,Malaysia Mandailing,A B DRB1,Malaysia,27,South-East Asia,10/31/18
+3351,Malaysia Pahang Semai,A B DRB1,Malaysia,38,South-East Asia,1/23/17
+3437,Malaysia Patani,A B DRB1,Malaysia,25,South-East Asia,10/31/18
+3652,Malaysia Peninsular Chinese,A B C DQB1 DRB1,Malaysia,194,South-East Asia,9/9/19
+3674,Malaysia Peninsular Indian,A B C DQB1 DRB1,Malaysia,271,South-East Asia,2/6/20
+3323,Malaysia Peninsular Malay,A B C DQB1 DRB1,Malaysia,951,South-East Asia,11/22/16
+3493,Mexico Aguascalientes state,A B DQB1 DRB1,Mexico,95,North America,5/25/18
+3527,"Mexico Baja Californa, Mexicali",A B DQB1 DRB1,Mexico,100,North America,5/25/18
+3571,Mexico Baja California Rural,A B DQB1 DRB1,Mexico,50,North America,1/9/19
+3526,"Mexico Baja California, La Paz",A B DQB1 DRB1,Mexico,75,North America,5/25/18
+3615,"Mexico Baja California, Tijuana",A B DQB1 DRB1,Mexico,25,North America,4/17/19
+3596,Mexico Campeche Rural,A B DQB1 DRB1,Mexico,47,North America,1/9/19
+3458,"Mexico Campeche, Campeche city",A B DQB1 DRB1,Mexico,34,North America,5/25/18
+3666,Mexico Chiapas Lacandon Mayans,A B C DPA1 DPB1 DQA1 DQB1 DRB1,Mexico,218,North America,11/22/19
+3595,Mexico Chiapas Rural,A B DQB1 DRB1,Mexico,121,North America,1/9/19
+3460,"Mexico Chiapas, Tuxtla Gutierrez",A B DQB1 DRB1,Mexico,52,North America,5/25/18
+3519,Mexico Chihuahua Chihuahua City,A B DQB1 DRB1,Mexico,119,North America,10/4/19
+3654,Mexico Chihuahua Chihuahua City Pop 2,A B DQB1 DRB1,Mexico,88,North America,10/4/19
+3574,Mexico Chihuahua Rural,A B DQB1 DRB1,Mexico,236,North America,1/9/19
+3518,"Mexico Chihuahua, Ciudad Juarez",A B DQB1 DRB1,Mexico,106,North America,5/25/18
+3576,Mexico Coahuila Rural,A B DQB1 DRB1,Mexico,216,North America,1/9/19
+3514,"Mexico Coahuila, Saltillo",A B DQB1 DRB1,Mexico,72,North America,5/25/18
+3513,"Mexico Coahuila, Torreon",A B DQB1 DRB1,Mexico,396,North America,5/25/18
+3582,Mexico Colima Rural,A B DQB1 DRB1,Mexico,43,North America,1/9/19
+3496,"Mexico Colima, Colima city",A B DQB1 DRB1,Mexico,61,North America,5/25/18
+3575,Mexico Durango Rural,A B DQB1 DRB1,Mexico,326,North America,1/9/19
+3516,"Mexico Durango, Durango city",A B DQB1 DRB1,Mexico,153,North America,5/25/18
+3581,Mexico Guanajuato Rural,A B DQB1 DRB1,Mexico,162,North America,1/9/19
+3498,"Mexico Guanajuato, Guanajuato city",A B DQB1 DRB1,Mexico,22,North America,5/25/18
+3497,"Mexico Guanajuato, Leon",A B DQB1 DRB1,Mexico,78,North America,5/25/18
+3468,Mexico Guerrero state,A B DQB1 DRB1,Mexico,144,North America,5/25/18
+3663,Mexico Hidalgo Mezquital Valley/ Otomi,A B C DQB1 DRB1,Mexico,72,North America,9/22/19
+3588,Mexico Hidalgo Rural,A B DQB1 DRB1,Mexico,81,North America,1/9/19
+3478,"Mexico Hidalgo, Pachuca",A B DQB1 DRB1,Mexico,41,North America,5/25/18
+3579,Mexico Jalisco Rural,A B DQB1 DRB1,Mexico,585,North America,1/9/19
+3506,"Mexico Jalisco, Guadalajara city",A B DQB1 DRB1,Mexico,1189,North America,5/25/18
+3505,"Mexico Jalisco, Tlajomulco",A B DQB1 DRB1,Mexico,30,North America,5/25/18
+3504,"Mexico Jalisco, Tlaquepaque",A B DQB1 DRB1,Mexico,39,North America,5/25/18
+3503,"Mexico Jalisco, Tonala",A B DQB1 DRB1,Mexico,35,North America,5/25/18
+3502,"Mexico Jalisco, Zapopan",A B DQB1 DRB1,Mexico,168,North America,5/25/18
+3770,Mexico Jaltepec Mazahuas,DRB1,Mexico,50,North America,3/31/22
+3476,Mexico Mexico City Center,A B DQB1 DRB1,Mexico,152,North America,6/22/18
+3475,Mexico Mexico City East,A B DQB1 DRB1,Mexico,79,North America,6/22/18
+3589,Mexico Mexico City Metropolitan Area Rural,A B DQB1 DRB1,Mexico,150,North America,1/9/19
+3474,Mexico Mexico City North,A B DQB1 DRB1,Mexico,751,North America,6/22/18
+3473,Mexico Mexico City South,A B DQB1 DRB1,Mexico,52,North America,6/22/18
+3655,Mexico Mexico City Tlalpan,A B DQB1 DRB1,Mexico,330,North America,10/25/19
+3454,Mexico Mexico City West,A B DQB1 DRB1,Mexico,33,North America,6/22/18
+3580,Mexico Michoacan Rural,A B DQB1 DRB1,Mexico,348,North America,1/9/19
+3500,"Mexico Michoacan, Morelia",A B DQB1 DRB1,Mexico,150,North America,5/25/18
+3711,Mexico Mixe NA-DHS_6 (G),A B C DRB1,Mexico,20,South and Central America,6/6/20
+3712,Mexico Mixtec NA-DHS_5 (G),A B C DRB1,Mexico,20,South and Central America,6/6/20
+3593,Mexico Morelos Rural,A B DQB1 DRB1,Mexico,30,North America,1/9/19
+3464,"Mexico Morelos, Cuernavaca",A B DQB1 DRB1,Mexico,82,North America,5/25/18
+3578,Mexico Nayarit Rural,A B DQB1 DRB1,Mexico,64,North America,1/9/19
+3508,"Mexico Nayarit, Tepic",A B DQB1 DRB1,Mexico,97,North America,5/25/18
+3583,Mexico Nuevo Leon Rural,A B DQB1 DRB1,Mexico,439,North America,1/9/19
+3494,"Mexico Nuevo Leon, Monterrey city",A B DQB1 DRB1,Mexico,226,North America,5/25/18
+3687,Mexico Oaxaca Jamiltepec Mixtec,A B DRB1,Mexico,96,North America,5/14/20
+3592,Mexico Oaxaca Rural,A B DQB1 DRB1,Mexico,485,North America,1/9/19
+3466,"Mexico Oaxaca, Oaxaca city",A B DQB1 DRB1,Mexico,151,North America,5/25/18
+3591,Mexico Puebla Rural,A B DQB1 DRB1,Mexico,833,North America,1/9/19
+3469,"Mexico Puebla, Puebla city",A B DQB1 DRB1,Mexico,1994,North America,5/25/18
+3584,Mexico Queretaro Rural,A B DQB1 DRB1,Mexico,43,North America,1/9/19
+3491,"Mexico Queretaro, Queretaro city",A B DQB1 DRB1,Mexico,45,North America,5/25/18
+3598,Mexico Quintana Roo Rural,A B DQB1 DRB1,Mexico,50,North America,1/9/19
+3450,"Mexico Quintana Roo, Cancun",A B DQB1 DRB1,Mexico,48,North America,5/21/18
+3586,Mexico San Luis Potosi Rural,A B DQB1 DRB1,Mexico,87,North America,1/9/19
+3487,"Mexico San Luis Potosi, San Luis Potosi city",A B DQB1 DRB1,Mexico,30,North America,5/25/18
+3679,Mexico San Vicente Tancuayalab Teenek/Huastecos,A B DQB1 DRB1,Mexico,53,North America,3/10/20
+3678,Mexico Sinaloa Capomos Mayo Yoremes,A B DQB1 DRB1,Mexico,60,North America,2/26/20
+3573,Mexico Sinaloa Rural,A B DQB1 DRB1,Mexico,183,North America,1/9/19
+3521,"Mexico Sinaloa, Culiacán",A B DQB1 DRB1,Mexico,103,North America,5/25/18
+3572,Mexico Sonora Rural,A B DQB1 DRB1,Mexico,197,North America,1/9/19
+3524,"Mexico Sonora, Ciudad Obregón",A B DQB1 DRB1,Mexico,143,North America,5/25/18
+3523,"Mexico Sonora, Hermosillo",A B DQB1 DRB1,Mexico,99,North America,5/25/18
+3594,Mexico Tabasco Rural,A B DQB1 DRB1,Mexico,142,North America,1/9/19
+3462,"Mexico Tabasco, Villahermosa",A B DQB1 DRB1,Mexico,82,North America,5/25/18
+3585,Mexico Tamaulipas Rural,A B DQB1 DRB1,Mexico,125,North America,1/9/19
+3489,"Mexico Tamaulipas, Ciudad Victoria",A B DQB1 DRB1,Mexico,23,North America,5/25/18
+3590,Mexico Tlaxcala Rural,A B DQB1 DRB1,Mexico,830,North America,1/9/19
+3471,"Mexico Tlaxcala, Tlaxcala city",A B DQB1 DRB1,Mexico,181,North America,5/25/18
+3587,Mexico Veracruz Rural,A B DQB1 DRB1,Mexico,539,North America,1/9/19
+3653,Mexico Veracruz Xalapa,A B DQB1 DRB1,Mexico,84,North America,10/25/19
+3485,"Mexico Veracruz, Coatzacoalcos",A B DQB1 DRB1,Mexico,55,North America,5/25/18
+3483,"Mexico Veracruz, Cordoba",A B DQB1 DRB1,Mexico,56,North America,5/25/18
+3484,"Mexico Veracruz, Orizaba",A B DQB1 DRB1,Mexico,60,North America,5/25/18
+3482,"Mexico Veracruz, Poza Rica",A B DQB1 DRB1,Mexico,45,North America,5/25/18
+3481,"Mexico Veracruz, Veracruz city",A B DQB1 DRB1,Mexico,171,North America,5/25/18
+3480,"Mexico Veracruz, Xalapa",A B DQB1 DRB1,Mexico,187,North America,5/25/18
+3597,Mexico Yucatan Rural,A B DQB1 DRB1,Mexico,132,North America,9/9/20
+3456,"Mexico Yucatan, Merida",A B DQB1 DRB1,Mexico,192,North America,5/25/18
+3577,Mexico Zacatecas Rural,A B DQB1 DRB1,Mexico,266,North America,1/9/19
+3510,"Mexico Zacatecas, Fresnillo",A B DQB1 DRB1,Mexico,103,North America,5/25/18
+3511,"Mexico Zacatecas, Zacatecas city",A B DQB1 DRB1,Mexico,84,North America,5/25/18
+3697,Mexico Zapotec NA-DHS_7 (G),A B C DRB1,Mexico,20,South and Central America,6/6/20
+3668,Myanmar Bamar,A B C DPB1 DQB1 DRB1,Myanmar,46,South-East Asia,11/10/20
+3403,Myanmar Chin,A B C DRB1,Myanmar,55,South-East Asia,5/21/18
+3404,Myanmar Kachin,A B C DRB1,Myanmar,63,South-East Asia,5/21/18
+3405,Myanmar Kayah,A B C DRB1,Myanmar,55,South-East Asia,5/21/18
+3406,Myanmar Kayin,A B C DPB1 DQB1 DRB1,Myanmar,44,South-East Asia,5/21/18
+3407,Myanmar Mon,A B C DRB1,Myanmar,64,South-East Asia,5/21/18
+3408,Myanmar Rakhine,A B C DRB1,Myanmar,48,South-East Asia,5/21/18
+3409,Myanmar Shan,A B C DRB1,Myanmar,54,South-East Asia,5/21/18
+3154,Netherlands UMCU,A B C DQB1 DRB1,Netherlands,64,Europe,8/18/20
+3340,New Zealand Maori with Admixed History,A B C DRB1,New Zealand,105,Oceania,5/31/16
+3339,New Zealand Maori with Full Ancestry,A B C DRB1,New Zealand,46,Oceania,5/31/16
+3338,New Zealand Polynesians with Admixed History,A B C DRB1,New Zealand,27,Oceania,5/31/16
+3337,New Zealand Polynesians with Full Ancestry,A B C DRB1,New Zealand,21,Oceania,5/31/16
+3417,Nicaragua Managua,A B C DPB1 DQA1 DQB1 DRB1,Nicaragua,339,South and Central America,11/15/17
+3610,Nicaragua Mestizo (G),A B C DRB1,Nicaragua,155,South and Central America,9/25/19
+3427,Norway ethnic Norwegians,A B C DPB1 DQB1 DRB1,Norway,4510,Europe,1/24/18
+3698,Paraguay/Argentina Ache NA-DHS_24 (G),A B C DRB1,Paraguay,13,South and Central America,6/6/20
+3694,Paraguay/Argentina Guarani NA-DHS_23 (G),A B C DRB1,Paraguay,10,South and Central America,9/9/20
+3564,Peru Titikaka Lake Uros,A B DQB1 DRB1,Peru,105,South and Central America,10/18/18
+3690,Philippines National Capital Region,A B DRB1,Philippines,51,Oceania,5/22/20
+3335,Portugal Azores Terceira Island,A B C DQA1 DQB1 DRB1 E F G,Portugal,130,Europe,1/23/17
+3780,Russia Belgorod region,A B C DPA1 DPB1 DQA1 DQB1 DRB1,Russia,153,North-East Asia,8/4/22
+3750,"Russia Bashkortostan, Bashkirs",A B C DQB1 DRB1,Russia,120,North-East Asia,10/3/22
+3751,"Russia Bashkortostan, Tatars",A B C DQB1 DRB1,Russia,192,North-East Asia,10/3/22
+3619,Russia Bering Island Aleuts,A B C DRB1,Russia,104,North-East Asia,8/18/20
+3430,Russia Karelia,A B C DPB1 DQB1 DRB1,Russia,1075,North-East Asia,4/25/19
+3322,Russia Moscow Pop 2,A B DRB1,Russia,2000,North-East Asia,10/20/20
+3744,"Russia Nizhny Novgorod, Russians",A B C DQB1 DRB1,Russia,1510,North-East Asia,10/3/22
+3436,Russia North Ossetian,A B C DQB1 DRB1,Russia,127,North-East Asia,10/20/20
+3621,Russia Transbaikal Territory Buryats,A B C DQB1 DRB1,Russia,150,North-East Asia,9/29/19
+3692,Russia Tundra Nentsi NA-DHS_1 (G),A B C DRB1,Russia,16,North-East Asia,6/6/20
+3397,"Russia, South Ural, Chelyabinsk region, Nagaybaks",A B DQA1 DQB1 DRB1,Russia,112,North-East Asia,3/9/17
+3425,South Africa Worcester,A B C DPA1 DPB1 DQA1 DQB1 DRB1,South Africa,159,Sub-Saharan Africa,12/5/19
+3671,South African Black,A B C DPB1 DQB1 DRB1,South Africa,142,Sub-Saharan Africa,12/5/19
+3394,South African Indian population,A B C,South Africa,50,Sub-Saharan Africa,7/20/18
+3395,South African Mixed ancestry,A B C,South Africa,50,Sub-Saharan Africa,7/20/18
+3769,Spain Las Alpujarras,DQA1 DQB1 DRB1,Spain,85,Europe,3/11/22
+3605,"Spain, Canary Islands, Gran canaria island",A B C DQB1 DRB1,Spain,215,Europe,8/18/20
+3741,"Spain, Castilla y Leon, Northwest,",A B C DQA1 DQB1 DRB1,Spain,1743,Europe,3/21/21
+3423,Sri Lanka Colombo,A B C DPB1 DQA1 DQB1 DRB1,Sri Lanka,714,South Asia,12/8/17
+3765,Sudan Khartoum,A B C DQB1 DRB1,Sudan,98,North Africa,2/25/22
+3600,United Arab Emirates Abu Dhabi,A B C DQA1 DQB1 DRB1,United Arab Emirates,52,Western Asia,4/18/19
+3562,USA San Diego,A B C DPB1 DQA1 DQB1 DRB1,United States,496,North America,9/8/18

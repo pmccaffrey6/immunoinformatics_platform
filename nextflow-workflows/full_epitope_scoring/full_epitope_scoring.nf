@@ -17,6 +17,57 @@ params.netmhcpani = "no"
 params.netmhcpanii = "no"
 params.dc_bcell = "no"
 params.consolidate_epitopes = "no"
+params.jessev = "no"
+
+
+process PROCESSINPUTFASTA {
+    debug true
+
+    publishDir "${params.epitope_output_folder}/processed_fastas"
+
+    input:
+    path protein_fasta
+
+    output:
+    path("${protein_fasta.getBaseName()}_no_descriptors.fasta"), emit: fasta_wo_descriptions
+
+    script:
+    """
+    #!/usr/bin/python3
+    import os
+    import pandas as pd
+    from Bio import SeqIO
+    from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
+
+    sequences = []
+    clean_protein_ids = []
+    protein_descriptions = []
+
+    for record in SeqIO.parse("${protein_fasta}", "fasta"):
+        sequences.append(record.seq)
+        clean_protein_ids.append(record.id)
+        protein_descriptions.append(record.description)
+
+    clean_records = [SeqRecord(seq=seq, id=id, description="") for seq,id in zip(sequences, clean_protein_ids)]
+
+    with open("${protein_fasta.getBaseName()}_no_descriptors.fasta", "w") as output_handle:
+        SeqIO.write(clean_records, output_handle, "fasta")
+
+
+    if not os.path.exists("${params.epitope_output_folder}/join_tables"):
+        os.makedirs("${params.epitope_output_folder}/join_tables")
+
+    input_fasta_table = pd.DataFrame(data={
+        "sequence":sequences,
+        "protein_id":clean_protein_ids,
+        "protein_description":protein_descriptions})
+
+    input_fasta_table.to_csv("${params.epitope_output_folder}/join_tables/input_fasta_table.tsv", sep='\t')
+    """
+
+}
+
 
 process CDHIT {
     debug true
@@ -323,11 +374,14 @@ process CONSOLIDATEEPITOPES {
     # Consolidate from Bepipred
     print("Consolidating Bepipred")
     bepipred_output_files = glob.glob("${params.epitope_output_folder}/bepipred_output/*.tsv")
-    bepipred_df = pd.concat([pd.read_csv(file, sep='\t') for file in bepipred_output_files])[["Peptipe","protein_id"]].drop_duplicates()
+    bepipred_df = pd.concat([pd.read_csv(file, sep='\t') for file in bepipred_output_files])[["Peptipe","Length","protein_id"]].drop_duplicates()
     ##[["Peptide","protein_id"]]
     bepipred_df.rename(columns={"Peptipe":"sequence"}, inplace=True)
     bepipred_df["type"] = "bepipred"
     bepipred_df["bepipred_score"] = 1
+    # Filter Bepipred predicted epitopes by target size of 5-22 AA
+    bepipred_df = bepipred_df[(bepipred_df["Length"]>=5) & (bepipred_df["Length"]<=22)]
+    bepipred_df.drop("Length", axis=1, inplace=True)
     print(f"Bepipred Table Size: {bepipred_df.shape}")
 
     # Consolidate from Discotope
@@ -346,8 +400,8 @@ process CONSOLIDATEEPITOPES {
     netmhcpan_i_dfs = []
     for file in netmhcpan_i_files:
         df = pd.read_csv(file, sep='\t', skiprows=1)
-        df_for_col = pd.read_csv(file, sep='\t')
-        df["allele"] = df_for_col.columns[-1]
+        df_for_col = pd.read_csv(file)
+        df["allele"] = df_for_col.columns[-1].strip('\t')
         netmhcpan_i_dfs.append(df)
     netmhcpan_i_df = pd.concat(netmhcpan_i_dfs)
     netmhcpan_i_df.rename(columns={"ID":"protein_id"}, inplace=True)
@@ -355,7 +409,7 @@ process CONSOLIDATEEPITOPES {
     ##[["peptide","proteinid"]]
     netmhcpan_i_df.rename(columns={"Peptide":"sequence","EL-score":"netmhcpan_i_el_score","EL_Rank":"netmhcpan_i_el_rank","BA-score":"netmhcpan_i_ba_score","BA_Rank":"netmhcpan_i_ba_rank","Ave":"netmhcpan_i_ave","NB":"netmhcpan_i_nb"}, inplace=True)
     netmhcpan_i_df["type"] = "netmhcpan_i"
-    netmhcpan_i_df.to_feather("${params.epitope_output_folder}/netmhcpan_i_output/all_netmhcpan_i.feather")
+    netmhcpan_i_df.reset_index().to_feather("${params.epitope_output_folder}/netmhcpan_i_output/all_netmhcpan_i.feather")
     print(f"NetMHCPAN I Table Size: {netmhcpan_i_df.shape}")
 
     # Consolidate from NetMHCIIPan
@@ -364,8 +418,8 @@ process CONSOLIDATEEPITOPES {
     netmhcpan_ii_dfs = []
     for file in netmhcpan_ii_files:
         df = pd.read_csv(file, sep='\t', skiprows=1)
-        df_for_col = pd.read_csv(file, sep='\t')
-        df["allele"] = df_for_col.columns[-1]
+        df_for_col = pd.read_csv(file)
+        df["allele"] = df_for_col.columns[-1].strip('\t')
         netmhcpan_ii_dfs.append(df)
     netmhcpan_ii_df = pd.concat(netmhcpan_ii_dfs)
     netmhcpan_ii_df.rename(columns={"ID":"protein_id"}, inplace=True)
@@ -373,13 +427,15 @@ process CONSOLIDATEEPITOPES {
     ##[["peptide","protein_id"]]
     netmhcpan_ii_df.rename(columns={"Peptide":"sequence","Score":"netmhcpan_ii_el_score","Rank":"netmhcpan_ii_el_rank","Score_BA":"netmhcpan_ii_ba_score","Rank_BA":"netmhcpan_ii_ba_rank","Ave":"netmhcpan_ii_ave","NB":"netmhcpan_ii_nb"}, inplace=True)
     netmhcpan_ii_df["type"] = "netmhcpan_ii"
-    netmhcpan_ii_df.to_feather("${params.epitope_output_folder}/netmhcpan_ii_output/all_netmhcpan_ii.feather")
+    netmhcpan_ii_df.reset_index().to_feather("${params.epitope_output_folder}/netmhcpan_ii_output/all_netmhcpan_ii.feather")
     print(f"NetMHCPAN II Table Size: {netmhcpan_ii_df.shape}")
 
     # Consolidate Outputs
     all_concat_df_outdir = "${params.epitope_output_folder}/consolidated_outputs"
     if not os.path.exists(all_concat_df_outdir):
         os.makedirs(all_concat_df_outdir)
+
+
 
     # Create consolidated FASTA
     dfs = [epidope_df, bepipred_df, discotope_df, netmhcpan_i_df, netmhcpan_ii_df]
@@ -389,8 +445,10 @@ process CONSOLIDATEEPITOPES {
         sequence_records = []
         df_type = df["type"].values[0]
         for idx, row in df[(pd.notna(df["sequence"]))][["protein_id","sequence"]].drop_duplicates().iterrows():
-            sequence_records.append(SeqRecord(seq=Seq(str(row["sequence"])), id=str(row["sequence"]), description=str(df_type)))
-            txt_lines.append(str(row["sequence"]))
+            if row["sequence"] not in txt_lines:
+                sequence_records.append(SeqRecord(seq=Seq(str(row["sequence"])), id=str(row["sequence"]), description=str(df_type)))
+                txt_lines.append(row["sequence"])
+            txt_lines = list(set(txt_lines))
 
         with open(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_epitopes_{df_type}.fasta", 'w') as df_fasta_outfile:
             SeqIO.write(sequence_records, df_fasta_outfile, "fasta")
@@ -404,7 +462,7 @@ process CONSOLIDATEEPITOPES {
     # Consolidate all dfs together
     for df in [epidope_df, bepipred_df, discotope_df, netmhcpan_i_df, netmhcpan_ii_df]:
         df_type = df["type"].values[0]
-        df.to_feather(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_outputs_{df_type}.feather", sep='\t')
+        df.reset_index().to_feather(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_outputs_{df_type}.feather")
         df.to_csv(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_outputs_{df_type}.tsv", sep='\t')
     """
 }
@@ -426,11 +484,48 @@ process GATHEREPITOPEFASTAS {
 
 }
 
+process PREPAREDATAFORJESSEV {
+    debug true
+
+    publishDir "${params.epitope_output_folder}/jessev_input"
+
+    output:
+    path("jessev_input.csv"), emit: jessev_input_csv
+
+    script:
+    """
+    #!/usr/bin/python3
+    import pandas as pd
+    import os
+
+    MAX_NUM_PROTEIN_IDS = 10
+    THRESHOLD_VALUE = 05.00
+    THRESHOLD_ATTRIBUTE = "netmhcpan_i_ba_rank"
+
+    if not os.path.exists("${params.epitope_output_folder}/jessev_inputs"):
+        os.makedirs("${params.epitope_output_folder}/jessev_inputs")
+
+    netmhcpan_i_df = pd.read_feather("${params.epitope_output_folder}/netmhcpan_i_output/all_netmhcpan_i.feather")
+    jess_ev_df = netmhcpan_i_df[netmhcpan_i_df[THRESHOLD_ATTRIBUTE]<THRESHOLD_VALUE][["sequence", "protein_id", "allele", "netmhcpan_i_ba_score"]].drop_duplicates().groupby("sequence").agg({"protein_id":";".join, "allele":";".join, "netmhcpan_i_ba_score":"mean"})
+    # Because some of these epitopes appear in MANY proteins, we have to do some deduplication.
+    # first we only keep the UNIQUE alleles from the aggregation which makes sense
+    # second, we have to set some cap on the number of protein_ids we can carry forward to JessEV
+    # and that number is captured in MAX_NUM_PROTEIN_IDS
+    jess_ev_df["allele"] = jess_ev_df["allele"].apply(lambda x: ';'.join(list(set(x.split(';')))))
+    jess_ev_df["protein_id"] = jess_ev_df["protein_id"].apply(lambda x: ';'.join( sorted(list(set(x.split(';'))))[:MAX_NUM_PROTEIN_IDS]))
+    print(f"shape of JessEV input table: {jess_ev_df.shape}")
+    jess_ev_df.reset_index().rename(columns={"netmhcpan_i_ba_score":"immunogen", "sequence":"epitope", "protein_id":"proteins", "allele":"alleles"}).to_csv("jessev_input.csv", index=False)
+    """
+}
+
 workflow {
     protein_fasta_ch = Channel.fromPath(params.protein_file)
     protein_fasta_value_ch = file(params.protein_file)
-    protein_fasta_splits_value_ch = Channel.fromPath(protein_fasta_value_ch).splitFasta(by: params.netmhcpan_chunk_size, file: true).collect()
+    protein_fasta_clean_ch = PROCESSINPUTFASTA(protein_fasta_value_ch)
+    protein_fasta_clean_ch.view()
 
+    /*protein_fasta_splits_value_ch = Channel.fromPath(protein_fasta_value_ch).splitFasta(by: params.netmhcpan_chunk_size, file: true).collect()*/
+    protein_fasta_splits_value_ch = protein_fasta_clean_ch.splitFasta(by: params.netmhcpan_chunk_size, file: true).collect()
 
     alphafold_pdb_ch = Channel.fromPath(params.alphafold_pdb_folder)
 
@@ -447,14 +542,11 @@ workflow {
     }
     /* B-CELL SCORING */
     if (params.bepipred == "yes") {
-        bepipred_out_ch = BEPIPRED(protein_fasta_ch)
+        bepipred_out_ch = BEPIPRED(protein_fasta_clean_ch)
         BEPIPREDTOTSV(bepipred_out_ch.bepipred_output)
     }
-    /*if (params.epidope == "yes") {
-        EPIDOPE(protein_fasta_ch)
-    }*/
     if (params.epidope == "yes") {
-        EPIDOPE(protein_fasta_ch.splitFasta(by: 500, file: true))
+        EPIDOPE(protein_fasta_clean_ch.splitFasta(by: 500, file: true))
     }
     if (params.dc_bcell == "yes") {
         MIGRATEAF2()
@@ -463,7 +555,7 @@ workflow {
     }
     /* T-CELL SCORING */
     if (params.netmhcpani == "yes") {
-        NETMHCPANI(protein_fasta_value_ch, mhc_i_alleles_ch)
+        NETMHCPANI(protein_fasta_clean_ch, mhc_i_alleles_ch)
     }
     if (params.netmhcpanii == "yes") {
         NETMHCPANII(protein_fasta_splits_value_ch, mhc_ii_alleles_ch)
@@ -475,5 +567,9 @@ workflow {
 
         cdhit_epitopes_out_ch = CDHIT(consolidated_epitopes_fasta_ch, params.cdhit_similarity_threshold)
         CDHITTOTSV(cdhit_epitopes_out_ch.clstr_file, params.cdhit_similarity_threshold, "epitopes")
+    }
+    if (params.jessev == "yes") {
+        jessev_input_file_ch = PREPAREDATAFORJESSEV()
+        jessev_input_file_ch.view()
     }
 }
