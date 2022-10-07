@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
+params.immunoinformatics_allele_table_path = '/home/pathinformatics/immunoinformatics_platform/host/host-data/allele-frequency-processed-tables/all_allele_frequencies.tsv'
+
 /*params.protein_file = '/home/pathinformatics/example_data_for_nextflow/fasta_files/proteins/test.fasta'*/
 params.protein_file = '/home/pathinformatics/example_data_for_nextflow/fasta_files/proteins/alphavirus_protein_multiseq.fasta'
 params.epitope_output_folder = '/home/pathinformatics/epitope_outputs'
@@ -19,6 +21,8 @@ params.dc_bcell = "no"
 params.consolidate_epitopes = "no"
 params.jessev = "no"
 
+
+params.allele_target_region = "Brazil"
 
 process PROCESSINPUTFASTA {
     debug true
@@ -68,6 +72,54 @@ process PROCESSINPUTFASTA {
 
 }
 
+process FORMATALLELEFREQUENCIES {
+    debug true
+
+    publishDir "${params.epitope_output_folder}/join_tables"
+
+    input:
+    val regions
+
+    output:
+    path("${regions.replaceAll(/,/,"_")}_regional_allele_frequencies.tsv"), emit: regional_allele_frequencies_tsv
+
+    script:
+    """
+    #!/usr/bin/python3
+    import pandas as pd
+
+    population_terms = "${regions}".split(",")
+
+    allele_df = pd.read_csv("${params.immunoinformatics_allele_table_path}", sep='\t')
+    regional_allele_data = pd.concat(allele_df[allele_df["dataset_name"].str.lower().str.contains(popterm.lower())] for popterm in population_terms).drop_duplicates()
+
+    dfs = []
+
+    for allele_type in regional_allele_data[pd.notna(regional_allele_data["allele_type"])]['allele_type'].unique():
+        allele_data = regional_allele_data[regional_allele_data["allele_type"]==allele_type]
+
+        allele_data = allele_data[(allele_data["locus"].str.contains(":")) & (pd.notna(allele_data["locus"]))]
+        allele_data["locus"] = allele_data["locus"].apply(lambda x: ':'.join(x.split(':')[:2]))
+
+        allele_data["count"] = 1
+        allele_denom = len(allele_data)
+        allele_grp = allele_data[["locus","count"]].groupby("locus").sum().reset_index()
+        allele_grp["prevalence"] = (allele_grp["count"] / allele_denom)
+
+        if allele_type in ["A","B","C"]:
+            allele_grp["locus_join"] = ["HLA-"+i.replace("*","") for i in allele_grp["locus"]]
+        else:
+            allele_grp["locus_join"] = [i.replace("*","_").replace(":","") for i in allele_grp["locus"]]
+
+        dfs.append(allele_grp)
+
+    allele_prevalence = pd.concat(dfs)
+    allele_prevalence["region"] = "_".join("${regions}".split(","))
+
+    allele_prevalence.to_csv("${regions.replaceAll(/,/,"_")}_regional_allele_frequencies.tsv", sep='\t')
+    """
+
+}
 
 process CDHIT {
     debug true
@@ -489,6 +541,9 @@ process PREPAREDATAFORJESSEV {
 
     publishDir "${params.epitope_output_folder}/jessev_input"
 
+    input:
+    path allele_frequencies_table
+
     output:
     path("jessev_input.csv"), emit: jessev_input_csv
 
@@ -502,11 +557,15 @@ process PREPAREDATAFORJESSEV {
     THRESHOLD_VALUE = 05.00
     THRESHOLD_ATTRIBUTE = "netmhcpan_i_ba_rank"
 
-    if not os.path.exists("${params.epitope_output_folder}/jessev_inputs"):
-        os.makedirs("${params.epitope_output_folder}/jessev_inputs")
+    if not os.path.exists("${params.epitope_output_folder}/jessev_input"):
+        os.makedirs("${params.epitope_output_folder}/jessev_input")
 
     netmhcpan_i_df = pd.read_feather("${params.epitope_output_folder}/netmhcpan_i_output/all_netmhcpan_i.feather")
-    jess_ev_df = netmhcpan_i_df[netmhcpan_i_df[THRESHOLD_ATTRIBUTE]<THRESHOLD_VALUE][["sequence", "protein_id", "allele", "netmhcpan_i_ba_score"]].drop_duplicates().groupby("sequence").agg({"protein_id":";".join, "allele":";".join, "netmhcpan_i_ba_score":"mean"})
+
+    allele_freq_df = pd.read_csv("${allele_frequencies_table}", sep='\t')
+    netmhcpan_i_df_allele_freq = netmhcpan_i_df.merge(allele_freq_df, left_on="allele", right_on="locus_join", how="inner")
+    netmhcpan_i_df_allele_freq["weighted_immunogen"] = netmhcpan_i_df_allele_freq["netmhcpan_i_ba_score"] * netmhcpan_i_df_allele_freq["prevalence"]
+    jess_ev_df = netmhcpan_i_df_allele_freq[netmhcpan_i_df_allele_freq[THRESHOLD_ATTRIBUTE]<THRESHOLD_VALUE][["sequence", "protein_id", "allele", "weighted_immunogen"]].drop_duplicates().groupby("sequence").agg({"protein_id":";".join, "allele":";".join, "weighted_immunogen":"mean"})
     # Because some of these epitopes appear in MANY proteins, we have to do some deduplication.
     # first we only keep the UNIQUE alleles from the aggregation which makes sense
     # second, we have to set some cap on the number of protein_ids we can carry forward to JessEV
@@ -514,7 +573,23 @@ process PREPAREDATAFORJESSEV {
     jess_ev_df["allele"] = jess_ev_df["allele"].apply(lambda x: ';'.join(list(set(x.split(';')))))
     jess_ev_df["protein_id"] = jess_ev_df["protein_id"].apply(lambda x: ';'.join( sorted(list(set(x.split(';'))))[:MAX_NUM_PROTEIN_IDS]))
     print(f"shape of JessEV input table: {jess_ev_df.shape}")
-    jess_ev_df.reset_index().rename(columns={"netmhcpan_i_ba_score":"immunogen", "sequence":"epitope", "protein_id":"proteins", "allele":"alleles"}).to_csv("jessev_input.csv", index=False)
+    jess_ev_df.reset_index().rename(columns={"weighted_immunogen":"immunogen", "sequence":"epitope", "protein_id":"proteins", "allele":"alleles"}).to_csv("jessev_input.csv", index=False)
+    """
+}
+
+process RUNJESSEV {
+    debug true
+
+    input:
+    path jessev_input_csv
+
+    script:
+    """
+    sudo docker run --rm \
+    -v /home/pathinformatics:/home/pathinformatics \
+    pmccaffrey6/jess_ev:latest \
+    /bin/bash -c "/opt/conda/envs/jessev/bin/python3 /JessEV/design.py \
+    -e 3 --verbose ${params.epitope_output_folder}/jessev_input/$jessev_input_csv ${params.epitope_output_folder}/jessev_input/jessev_output.csv"
     """
 }
 
@@ -523,6 +598,10 @@ workflow {
     protein_fasta_value_ch = file(params.protein_file)
     protein_fasta_clean_ch = PROCESSINPUTFASTA(protein_fasta_value_ch)
     protein_fasta_clean_ch.view()
+
+    /* CALCULATE ALLELE FREQUENCY TABLES */
+    allele_frequencies_table_ch = FORMATALLELEFREQUENCIES(params.allele_target_region)
+    allele_frequencies_table_ch.view()
 
     /*protein_fasta_splits_value_ch = Channel.fromPath(protein_fasta_value_ch).splitFasta(by: params.netmhcpan_chunk_size, file: true).collect()*/
     protein_fasta_splits_value_ch = protein_fasta_clean_ch.splitFasta(by: params.netmhcpan_chunk_size, file: true).collect()
@@ -569,7 +648,8 @@ workflow {
         CDHITTOTSV(cdhit_epitopes_out_ch.clstr_file, params.cdhit_similarity_threshold, "epitopes")
     }
     if (params.jessev == "yes") {
-        jessev_input_file_ch = PREPAREDATAFORJESSEV()
+        jessev_input_file_ch = PREPAREDATAFORJESSEV(allele_frequencies_table_ch)
         jessev_input_file_ch.view()
+        RUNJESSEV(jessev_input_file_ch)
     }
 }
