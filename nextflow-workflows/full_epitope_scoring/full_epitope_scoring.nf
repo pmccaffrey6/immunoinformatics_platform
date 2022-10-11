@@ -20,7 +20,7 @@ params.netmhcpanii = "no"
 params.dc_bcell = "no"
 params.consolidate_epitopes = "no"
 params.jessev = "no"
-
+params.jessev_top_n = 3
 
 params.allele_target_region = "Brazil"
 
@@ -323,6 +323,7 @@ process NETMHCPANI {
     -xls \
     -a $allele \
     -l 9 \
+    -t 15 \
     -v \
     -f ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta \
     -xlsfile netmhcpan_i_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_out.xls"
@@ -372,6 +373,8 @@ process NETMHCPANII {
     -xls \
     -a $allele \
     -length 15 \
+    -filter \
+    -rankF 10 \
     -v \
     -f ${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_cleaned.fasta \
     -xlsfile netmhcpan_ii_${allele.replaceAll(/-/, "_").replaceAll(/:/,"_").replaceAll(/\*/,"_")}_${protein_fasta.getName()}_out.xls"
@@ -493,14 +496,19 @@ process CONSOLIDATEEPITOPES {
     dfs = [epidope_df, bepipred_df, discotope_df, netmhcpan_i_df, netmhcpan_ii_df]
 
     def create_fasta_and_txt_from_df(df):
-        txt_lines = []
         sequence_records = []
         df_type = df["type"].values[0]
-        for idx, row in df[(pd.notna(df["sequence"]))][["protein_id","sequence"]].drop_duplicates().iterrows():
-            if row["sequence"] not in txt_lines:
-                sequence_records.append(SeqRecord(seq=Seq(str(row["sequence"])), id=str(row["sequence"]), description=str(df_type)))
-                txt_lines.append(row["sequence"])
-            txt_lines = list(set(txt_lines))
+        df_proc = df[(pd.notna(df["sequence"]))][["protein_id","sequence"]].drop_duplicates()
+        txt_lines = list(set(df_proc["sequence"].unique()))
+
+        pd.Series(df_proc["sequence"].unique()).apply(lambda x: sequence_records.append(SeqRecord(seq=Seq(str(x)), id=str(x), description=str(df_type)  )) )
+
+
+        #for idx, row in df[(pd.notna(df["sequence"]))][["protein_id","sequence"]].drop_duplicates().iterrows():
+        #    if row["sequence"] not in txt_lines:
+        #        sequence_records.append(SeqRecord(seq=Seq(str(row["sequence"])), id=str(row["sequence"]), description=str(df_type)))
+        #        txt_lines.append(row["sequence"])
+        #    txt_lines = list(set(txt_lines))
 
         with open(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_epitopes_{df_type}.fasta", 'w') as df_fasta_outfile:
             SeqIO.write(sequence_records, df_fasta_outfile, "fasta")
@@ -565,7 +573,7 @@ process PREPAREDATAFORJESSEV {
     allele_freq_df = pd.read_csv("${allele_frequencies_table}", sep='\t')
     netmhcpan_i_df_allele_freq = netmhcpan_i_df.merge(allele_freq_df, left_on="allele", right_on="locus_join", how="inner")
     netmhcpan_i_df_allele_freq["weighted_immunogen"] = netmhcpan_i_df_allele_freq["netmhcpan_i_ba_score"] * netmhcpan_i_df_allele_freq["prevalence"]
-    jess_ev_df = netmhcpan_i_df_allele_freq[netmhcpan_i_df_allele_freq[THRESHOLD_ATTRIBUTE]<THRESHOLD_VALUE][["sequence", "protein_id", "allele", "weighted_immunogen"]].drop_duplicates().groupby("sequence").agg({"protein_id":";".join, "allele":";".join, "weighted_immunogen":"mean"})
+    jess_ev_df = netmhcpan_i_df_allele_freq[netmhcpan_i_df_allele_freq[THRESHOLD_ATTRIBUTE]<THRESHOLD_VALUE][["sequence", "protein_id", "allele", "weighted_immunogen"]].drop_duplicates().groupby("sequence").agg({"protein_id":";".join, "allele":";".join, "weighted_immunogen":"sum"})
     # Because some of these epitopes appear in MANY proteins, we have to do some deduplication.
     # first we only keep the UNIQUE alleles from the aggregation which makes sense
     # second, we have to set some cap on the number of protein_ids we can carry forward to JessEV
@@ -582,14 +590,52 @@ process RUNJESSEV {
 
     input:
     path jessev_input_csv
+    val iterations
 
     script:
     """
-    sudo docker run --rm \
-    -v /home/pathinformatics:/home/pathinformatics \
-    pmccaffrey6/jess_ev:latest \
-    /bin/bash -c "/opt/conda/envs/jessev/bin/python3 /JessEV/design.py \
-    -e 3 --verbose ${params.epitope_output_folder}/jessev_input/$jessev_input_csv ${params.epitope_output_folder}/jessev_input/jessev_output.csv"
+    #!/usr/bin/python3
+    import pandas as pd
+    import subprocess
+    import glob
+    import os
+    import shutil
+    import docker
+    from docker.types import Mount
+
+    client = docker.from_env()
+
+    NUM_EPITOPES = 3
+    MIN_SPACER_LEN = 4
+
+    shutil.copy("${params.epitope_output_folder}/jessev_input/$jessev_input_csv", "${params.epitope_output_folder}/jessev_input/jessev_input_0.csv")
+
+    for iter in range($iterations):
+        print("running JessEV iteration:", iter)
+
+        if iter > 0:
+            input_csv_pre = f"${params.epitope_output_folder}/jessev_input/jessev_input_{iter-1}.csv"
+            df_input_csv_pre = pd.read_csv(input_csv_pre)
+            output_csv_pre = f"${params.epitope_output_folder}/jessev_input/jessev_output_{iter-1}.csv"
+            df_output_csv_pre = pd.read_csv(output_csv_pre)
+            df_input_csv_pre["jessev_used"] = [(i in df_output_csv_pre["vaccine"].values[0]) for i in df_input_csv_pre["epitope"]]
+            input_csv_filtered = df_input_csv_pre[df_input_csv_pre["jessev_used"]==False].drop("jessev_used", axis=1)
+            input_csv_filtered.to_csv(f"${params.epitope_output_folder}/jessev_input/jessev_input_{iter}.csv", index=False)
+
+        jessev_statement = f"${params.epitope_output_folder}/jessev_input/jessev_input_{iter}.csv ${params.epitope_output_folder}/jessev_input/jessev_output_{iter}.csv"
+
+        client.containers.run("pmccaffrey6/jess_ev:latest",
+            command=f"/opt/conda/envs/jessev/bin/python3 /JessEV/design.py -e 3 -s 4 {jessev_statement}",
+            auto_remove=True,
+            mounts=[Mount('/home/pathinformatics','//home/pathinformatics', type="bind")]
+         )
+
+    if not os.path.exists(f"${params.epitope_output_folder}/jessev_output/"):
+        os.makedirs(f"${params.epitope_output_folder}/jessev_output/")
+
+    pd.concat([pd.read_csv(i) for i in glob.glob(f"${params.epitope_output_folder}/jessev_input/jessev_output_*.csv")]).to_csv(
+        f"${params.epitope_output_folder}/jessev_output/jessev_outputs_top_${iterations}.tsv", sep='\t', index=False)
+
     """
 }
 
@@ -650,6 +696,6 @@ workflow {
     if (params.jessev == "yes") {
         jessev_input_file_ch = PREPAREDATAFORJESSEV(allele_frequencies_table_ch)
         jessev_input_file_ch.view()
-        RUNJESSEV(jessev_input_file_ch)
+        RUNJESSEV(jessev_input_file_ch, params.jessev_top_n)
     }
 }
