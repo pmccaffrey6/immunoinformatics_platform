@@ -2,6 +2,7 @@
 nextflow.enable.dsl = 2
 
 params.immunoinformatics_allele_table_path = '/home/pathinformatics/immunoinformatics_platform/host/host-data/allele-frequency-processed-tables/all_allele_frequencies.tsv'
+params.tcrpmhc_template_file = '/home/pathinformatics/immunoinformatics_platform/host/host-data/tcrpmhc_templates/TCRpMHC_template_0.fasta'
 
 /*params.protein_file = '/home/pathinformatics/example_data_for_nextflow/fasta_files/proteins/test.fasta'*/
 params.protein_file = '/home/pathinformatics/example_data_for_nextflow/fasta_files/proteins/alphavirus_protein_multiseq.fasta'
@@ -19,10 +20,13 @@ params.netmhcpani = "no"
 params.netmhcpanii = "no"
 params.dc_bcell = "no"
 params.consolidate_epitopes = "no"
+params.tcrpmhc = "no"
 params.jessev = "no"
 params.jessev_top_n = 3
 
 params.allele_target_region = "Brazil"
+
+params.netmhcpan_tcr_toprank_threshold = 0.05
 
 process PROCESSINPUTFASTA {
     debug true
@@ -450,6 +454,8 @@ process CONSOLIDATEEPITOPES {
     print(f"Discotope Table Size: {discotope_df.shape}")
 
     # Consolidate from NetMHCIPan
+    TOPRANK = $params.netmhcpan_tcr_toprank_threshold
+    toprank = str(TOPRANK).replace(".","_")
     print("Consolidating NetMHCPAN I")
     netmhcpan_i_files = glob.glob("${params.epitope_output_folder}/netmhcpan_i_output/*.xls")
     netmhcpan_i_dfs = []
@@ -463,11 +469,20 @@ process CONSOLIDATEEPITOPES {
     netmhcpan_i_df = netmhcpan_i_df[["Peptide","protein_id","allele","EL-score","EL_Rank","BA-score","BA_Rank","Ave","NB"]].drop_duplicates()
     ##[["peptide","proteinid"]]
     netmhcpan_i_df.rename(columns={"Peptide":"sequence","EL-score":"netmhcpan_i_el_score","EL_Rank":"netmhcpan_i_el_rank","BA-score":"netmhcpan_i_ba_score","BA_Rank":"netmhcpan_i_ba_rank","Ave":"netmhcpan_i_ave","NB":"netmhcpan_i_nb"}, inplace=True)
+    netmhcpan_i_df[["sequence", "protein_id"]].drop_duplicates().to_csv("${params.epitope_output_folder}/join_tables/netmhcpan_i_peptides_protein_ids.tsv", sep='\t')
     netmhcpan_i_df["type"] = "netmhcpan_i"
     netmhcpan_i_df.reset_index().to_feather("${params.epitope_output_folder}/netmhcpan_i_output/all_netmhcpan_i.feather")
     print(f"NetMHCPAN I Table Size: {netmhcpan_i_df.shape}")
+    netmhcpan_i_toprank = netmhcpan_i_df[netmhcpan_i_df["netmhcpan_i_ba_rank"]<=TOPRANK]
+    netmhcpan_i_toprank.to_csv(f"${params.epitope_output_folder}/netmhcpan_i_output/netmhcpan_i_top_{toprank}.tsv", sep='\t', index=False)
+    netmhcpan_i_toprank_records = [SeqRecord(seq=Seq(s), id=s, description="") for s in list(netmhcpan_i_toprank["sequence"].unique())]
+    with open(f"${params.epitope_output_folder}/netmhcpan_i_output/netmhcpan_i_top_{toprank}.fasta", "w") as netmhcpan_i_toprank_output_file:
+        SeqIO.write(netmhcpan_i_toprank_records, netmhcpan_i_toprank_output_file, "fasta")
+
 
     # Consolidate from NetMHCIIPan
+    TOPRANK = $params.netmhcpan_tcr_toprank_threshold
+    toprank = str(TOPRANK).replace(".","_")
     print("Consolidating NetMHCPAN II")
     netmhcpan_ii_files = glob.glob("${params.epitope_output_folder}/netmhcpan_ii_output/*.xls")
     netmhcpan_ii_dfs = []
@@ -481,9 +496,15 @@ process CONSOLIDATEEPITOPES {
     netmhcpan_ii_df = netmhcpan_ii_df[["Peptide","protein_id","allele","Score","Rank","Score_BA","Rank_BA","Ave","NB"]].drop_duplicates()
     ##[["peptide","protein_id"]]
     netmhcpan_ii_df.rename(columns={"Peptide":"sequence","Score":"netmhcpan_ii_el_score","Rank":"netmhcpan_ii_el_rank","Score_BA":"netmhcpan_ii_ba_score","Rank_BA":"netmhcpan_ii_ba_rank","Ave":"netmhcpan_ii_ave","NB":"netmhcpan_ii_nb"}, inplace=True)
+    netmhcpan_ii_df[["sequence", "protein_id"]].drop_duplicates().to_csv("${params.epitope_output_folder}/join_tables/netmhcpan_ii_peptides_protein_ids.tsv", sep='\t')
     netmhcpan_ii_df["type"] = "netmhcpan_ii"
     netmhcpan_ii_df.reset_index().to_feather("${params.epitope_output_folder}/netmhcpan_ii_output/all_netmhcpan_ii.feather")
     print(f"NetMHCPAN II Table Size: {netmhcpan_ii_df.shape}")
+    netmhcpan_ii_toprank = netmhcpan_ii_df[netmhcpan_ii_df["netmhcpan_ii_ba_rank"]<=TOPRANK]
+    netmhcpan_ii_toprank.to_csv(f"${params.epitope_output_folder}/netmhcpan_ii_output/netmhcpan_ii_top_{toprank}.tsv", sep='\t', index=False)
+    netmhcpan_ii_toprank_records = [SeqRecord(seq=Seq(s), id=s, description="") for s in list(netmhcpan_ii_toprank["sequence"].unique())]
+    with open(f"${params.epitope_output_folder}/netmhcpan_ii_output/netmhcpan_i_top_{toprank}.fasta", "w") as netmhcpan_ii_toprank_output_file:
+        SeqIO.write(netmhcpan_ii_toprank_records, netmhcpan_ii_toprank_output_file, "fasta")
 
     # Consolidate Outputs
     all_concat_df_outdir = "${params.epitope_output_folder}/consolidated_outputs"
@@ -502,13 +523,6 @@ process CONSOLIDATEEPITOPES {
         txt_lines = list(set(df_proc["sequence"].unique()))
 
         pd.Series(df_proc["sequence"].unique()).apply(lambda x: sequence_records.append(SeqRecord(seq=Seq(str(x)), id=str(x), description=str(df_type)  )) )
-
-
-        #for idx, row in df[(pd.notna(df["sequence"]))][["protein_id","sequence"]].drop_duplicates().iterrows():
-        #    if row["sequence"] not in txt_lines:
-        #        sequence_records.append(SeqRecord(seq=Seq(str(row["sequence"])), id=str(row["sequence"]), description=str(df_type)))
-        #        txt_lines.append(row["sequence"])
-        #    txt_lines = list(set(txt_lines))
 
         with open(f"${params.epitope_output_folder}/consolidated_outputs/consolidated_epitopes_{df_type}.fasta", 'w') as df_fasta_outfile:
             SeqIO.write(sequence_records, df_fasta_outfile, "fasta")
@@ -639,11 +653,36 @@ process RUNJESSEV {
     """
 }
 
+process TCRPMHC {
+    debug true
+
+    input:
+    path input_fasta
+    path template_fasta
+
+    script:
+    """
+    echo $input_fasta && \
+    echo $template_fasta && \
+
+    cp $template_fasta /home/pathinformatics/epitope_outputs/tcrpmhc_output/template_$input_fasta && \
+    cat $input_fasta >> /home/pathinformatics/epitope_outputs/tcrpmhc_output/template_$input_fasta && \
+    cat /home/pathinformatics/epitope_outputs/tcrpmhc_output/template_$input_fasta && \
+
+    /opt/conda/envs/TCRpMHCmodels/bin/tcrpmhc_models \
+    /home/pathinformatics/epitope_outputs/tcrpmhc_output/template_$input_fasta \
+    -n $input_fasta \
+    -p $params.epitope_output_folder/tcrpmhc_output
+    """
+}
+
 workflow {
     protein_fasta_ch = Channel.fromPath(params.protein_file)
     protein_fasta_value_ch = file(params.protein_file)
     protein_fasta_clean_ch = PROCESSINPUTFASTA(protein_fasta_value_ch)
     protein_fasta_clean_ch.view()
+
+    tcrpmhc_templates_value_ch = file(params.tcrpmhc_template_file)
 
     /* CALCULATE ALLELE FREQUENCY TABLES */
     allele_frequencies_table_ch = FORMATALLELEFREQUENCIES(params.allele_target_region)
@@ -692,6 +731,10 @@ workflow {
 
         cdhit_epitopes_out_ch = CDHIT(consolidated_epitopes_fasta_ch, params.cdhit_similarity_threshold)
         CDHITTOTSV(cdhit_epitopes_out_ch.clstr_file, params.cdhit_similarity_threshold, "epitopes")
+    }
+    if (params.tcrpmhc == "yes") {
+        protein_records_ch = Channel.fromPath("${params.epitope_output_folder}/netmhcpan_i_output/netmhcpan_i_top*.fasta").splitFasta(by: 1, file:true)
+        TCRPMHC(protein_records_ch, tcrpmhc_templates_value_ch)
     }
     if (params.jessev == "yes") {
         jessev_input_file_ch = PREPAREDATAFORJESSEV(allele_frequencies_table_ch)
