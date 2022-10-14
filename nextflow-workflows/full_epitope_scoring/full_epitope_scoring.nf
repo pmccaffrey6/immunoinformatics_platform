@@ -29,6 +29,8 @@ params.allele_target_region = "Brazil"
 
 params.netmhcpan_tcr_toprank_threshold = 0.05
 
+params.b_cell_antigen_templates="Q8QZ72,Q8JUX5"
+
 process PROCESSINPUTFASTA {
     debug true
 
@@ -781,6 +783,65 @@ process PDBEPISATOTABLE {
     """
 }
 
+process GETUNIPROTBYACCESSION {
+    debug true
+
+    publishDir "${params.epitope_output_folder}/b_cell_antigen_templates"
+
+    input:
+    val uniprot_accession
+
+    output:
+    path("${uniprot_accession}.fasta"), emit: b_cell_antigen_fasta
+
+    script:
+    """
+    #!/usr/bin/python3
+    import requests
+    import json
+    from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
+    from Bio import SeqIO
+    import os
+
+    uniprot_out = json.loads(requests.get(f"https://www.ebi.ac.uk/proteins/api/proteins/${uniprot_accession}").text)
+    fastaout = [SeqRecord(seq=Seq(str(uniprot_out['sequence']['sequence'])), id=uniprot_out['accession'], description="")]
+
+    if not os.path.exists("${params.epitope_output_folder}/b_cell_antigen_templates"):
+        os.makedirs("${params.epitope_output_folder}/b_cell_antigen_templates")
+
+    with open(f"${uniprot_accession}.fasta", "w") as uniprot_fasta_out:
+        SeqIO.write(fastaout, uniprot_fasta_out, "fasta")
+    """
+}
+
+process BLASTFROMFILES {
+    debug true
+
+    publishDir "${params.epitope_output_folder}/blast_database"
+
+    input:
+    val fasta_files
+    path query_file
+
+    output:
+    path("blast_results.tsv"), emit: blast_results_tsv
+
+    script:
+    """
+    echo "fasta files ${fasta_files}"
+    rm -f ${params.epitope_output_folder}/blast_database/uniprot_all.fasta*
+    cat ${fasta_files.join(" ")} >> ${params.epitope_output_folder}/blast_database/uniprot_all.fasta
+
+    makeblastdb -in ${params.epitope_output_folder}/blast_database/uniprot_all.fasta -input_type fasta -dbtype prot -title "b_cell_antigen_db"
+
+    blastp -query ${query_file} \
+    -db ${params.epitope_output_folder}/blast_database/uniprot_all.fasta \
+    -outfmt 6 -evalue 0.05 > blast_results.tsv
+    """
+
+}
+
 workflow {
     protein_fasta_ch = Channel.fromPath(params.protein_file)
     protein_fasta_value_ch = file(params.protein_file)
@@ -788,6 +849,10 @@ workflow {
     protein_fasta_clean_ch.view()
 
     tcrpmhc_templates_value_ch = file(params.tcrpmhc_template_file)
+
+    /*COLLECT B-CELL ANTIGEN TEMPLATES*/
+    b_cell_antigen_fastas = GETUNIPROTBYACCESSION(Channel.from(params.b_cell_antigen_templates.split(",")))
+    BLASTFROMFILES(b_cell_antigen_fastas.collect(), protein_fasta_value_ch)
 
     /* CALCULATE ALLELE FREQUENCY TABLES */
     allele_frequencies_table_ch = FORMATALLELEFREQUENCIES(params.allele_target_region)
