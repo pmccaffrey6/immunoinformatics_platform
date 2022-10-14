@@ -23,6 +23,7 @@ params.consolidate_epitopes = "no"
 params.tcrpmhc = "no"
 params.jessev = "no"
 params.jessev_top_n = 3
+params.include_docking_in_immunogenicity = "no"
 
 params.allele_target_region = "Brazil"
 
@@ -585,9 +586,16 @@ process PREPAREDATAFORJESSEV {
     netmhcpan_i_df = pd.read_feather("${params.epitope_output_folder}/netmhcpan_i_output/all_netmhcpan_i.feather")
 
     allele_freq_df = pd.read_csv("${allele_frequencies_table}", sep='\t')
-    netmhcpan_i_df_allele_freq = netmhcpan_i_df.merge(allele_freq_df, left_on="allele", right_on="locus_join", how="inner")
-    netmhcpan_i_df_allele_freq["weighted_immunogen"] = netmhcpan_i_df_allele_freq["netmhcpan_i_ba_score"] * netmhcpan_i_df_allele_freq["prevalence"]
-    jess_ev_df = netmhcpan_i_df_allele_freq[netmhcpan_i_df_allele_freq[THRESHOLD_ATTRIBUTE]<THRESHOLD_VALUE][["sequence", "protein_id", "allele", "weighted_immunogen"]].drop_duplicates().groupby("sequence").agg({"protein_id":";".join, "allele":";".join, "weighted_immunogen":"sum"})
+    netmhcpan_i_df_full = netmhcpan_i_df.merge(allele_freq_df, left_on="allele", right_on="locus_join", how="inner")
+
+    if "${params.include_docking_in_immunogenicity}"=="yes":
+        pdb_episa_df = pd.read_csv("${params.epitope_output_folder}/pdb_episa_output/pdb_episa_output_table.tsv", sep='\t').rename(columns={"SEQUENCE":"sequence"})
+        netmhcpan_i_df_full = netmhcpan_i_df_full.merge(pdb_episa_df, on="sequence", how="inner")
+        print(netmhcpan_i_df_full.head())
+        print("shape of epitope table with docking:", netmhcpan_i_df_full.shape)
+
+    netmhcpan_i_df_full["weighted_immunogen"] = netmhcpan_i_df_full["netmhcpan_i_ba_score"] * netmhcpan_i_df_full["prevalence"]
+    jess_ev_df = netmhcpan_i_df_full[netmhcpan_i_df_full[THRESHOLD_ATTRIBUTE]<THRESHOLD_VALUE][["sequence", "protein_id", "allele", "weighted_immunogen"]].drop_duplicates().groupby("sequence").agg({"protein_id":";".join, "allele":";".join, "weighted_immunogen":"sum"})
     # Because some of these epitopes appear in MANY proteins, we have to do some deduplication.
     # first we only keep the UNIQUE alleles from the aggregation which makes sense
     # second, we have to set some cap on the number of protein_ids we can carry forward to JessEV
@@ -660,6 +668,9 @@ process TCRPMHC {
     path input_fasta
     path template_fasta
 
+    output:
+    val "${params.epitope_output_folder}/tcrpmhc_output/${input_fasta}_TCR-pMHC.pdb", emit: tcrpmhc_output
+
     script:
     """
     echo $input_fasta && \
@@ -673,6 +684,100 @@ process TCRPMHC {
     /home/pathinformatics/epitope_outputs/tcrpmhc_output/template_$input_fasta \
     -n $input_fasta \
     -p $params.epitope_output_folder/tcrpmhc_output
+    """
+}
+
+process PDBEPISA {
+    debug true
+
+    input:
+    val tcrpmhc_batch
+
+    output:
+    val tcrpmhc_batch
+
+    script:
+    """
+    mkdir "${file(tcrpmhc_batch.first()).getBaseName()}" && \
+    cp ${tcrpmhc_batch.join(" ")} ${file(tcrpmhc_batch.first()).getBaseName()} && \
+    /opt/run "${file(tcrpmhc_batch.first()).getBaseName()}" $params.epitope_output_folder/pdb_episa_output
+    """
+}
+
+process PDBEPISATOTABLE {
+    debug true
+
+    input:
+    val pdb_files
+
+    script:
+    """
+    #!/usr/bin/python3
+    import pandas as pd
+    import os
+    import glob
+    import xml
+    import xml.etree.ElementTree as ET
+    from Bio.PDB.Polypeptide import three_to_one
+
+    existing_xml_files = glob.glob(f"${params.epitope_output_folder}/pdb_episa_output/*TCR-pMHC.xml")
+
+    print("received pdb files:")
+    print(f"${pdb_files}")
+
+    print("xml files:")
+    print(existing_xml_files)
+
+    def parse_pisa_xml(xml_file):
+        tree = ET.parse(xml_file)
+        root = tree.getroot()
+        elems = {i.tag:i for i in list(root)}
+
+        interface_summary = elems['INTERFACESUMMARY']
+        structures = list(interface_summary)
+        residues = list(elems['RESIDUES'])
+
+        structure_data = {}
+
+        for structure, residue in zip(structures, residues):
+            base_data = {i.tag:i for i in list(structure)}
+            base_tags = [i.tag for i in list(structure)]
+
+            for i in base_tags:
+                if i.startswith("NUMBEROFRED"):
+                    numresidues = base_data[i]
+                    for i in list(numresidues):
+                        base_data[i.tag] = int(i.text)
+
+            sequence = ''.join([ three_to_one(list(i)[0].text.split(':')[-1].strip(' ').split(' ')[0]) for i in list(residue)])
+            base_data['SEQUENCE'] = sequence
+
+            base_keys = base_data.keys()
+            for base_item in base_keys:
+                if base_item.startswith('SOLVENTAREA'):
+                    solvent_area = {i.tag:i.text for i in list(base_data[base_item])}
+                elif base_item.startswith('SOLVATIONENERGY'):
+                    solvation_energy = {i.tag:i.text for i in list(base_data[base_item])}
+
+            for item in solvent_area.keys():
+                newkey = f"SOLVENTAREA_{item}"
+                base_data[newkey] = float(solvent_area[item])
+
+            for item in solvation_energy.keys():
+                newkey = f"SOLVATIONERGY_{item}"
+                base_data[newkey] = float(solvation_energy[item])
+
+            structure_data[structure.tag] = {k:v for k,v in base_data.items() if not type(v)==xml.etree.ElementTree.Element}
+
+        df_out = pd.DataFrame(structure_data.values())
+        return df_out
+
+    xml_df = pd.concat([parse_pisa_xml(xml_file) for xml_file in existing_xml_files])
+    print("XML DF Shape:", xml_df.shape)
+    if not os.path.exists(f"${params.epitope_output_folder}/pdb_episa_output"):
+        os.makedirs(f"${params.epitope_output_folder}/pdb_episa_output")
+    xml_df["SEQUENCE_LENGTH"] = [len(i) for i in xml_df["SEQUENCE"]]
+    xml_df[xml_df["SEQUENCE_LENGTH"]<10].to_csv(f"${params.epitope_output_folder}/pdb_episa_output/pdb_episa_output_table.tsv", sep='\t')
     """
 }
 
@@ -733,8 +838,12 @@ workflow {
         CDHITTOTSV(cdhit_epitopes_out_ch.clstr_file, params.cdhit_similarity_threshold, "epitopes")
     }
     if (params.tcrpmhc == "yes") {
-        protein_records_ch = Channel.fromPath("${params.epitope_output_folder}/netmhcpan_i_output/netmhcpan_i_top*.fasta").splitFasta(by: 1, file:true)
-        TCRPMHC(protein_records_ch, tcrpmhc_templates_value_ch)
+        protein_records_ch = Channel.fromPath("${params.epitope_output_folder}/netmhcpan_i_output/netmhcpan_i_top*.fasta").splitFasta(by: 1, file:true).take(100)
+        tcrpmhc_pdbs = TCRPMHC(protein_records_ch, tcrpmhc_templates_value_ch)
+        tcrpmhc_batches = tcrpmhc_pdbs.collate(3)
+        tcrpmhc_batches.view()
+        pdb_episa_output_ch = PDBEPISA(tcrpmhc_batches)
+        PDBEPISATOTABLE(pdb_episa_output_ch.collect())
     }
     if (params.jessev == "yes") {
         jessev_input_file_ch = PREPAREDATAFORJESSEV(allele_frequencies_table_ch)
