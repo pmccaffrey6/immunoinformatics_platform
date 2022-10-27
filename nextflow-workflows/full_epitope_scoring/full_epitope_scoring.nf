@@ -837,9 +837,68 @@ process BLASTFROMFILES {
 
     blastp -query ${query_file} \
     -db ${params.epitope_output_folder}/blast_database/uniprot_all.fasta \
-    -outfmt 6 -evalue 0.05 > blast_results.tsv
+    -outfmt 6 -evalue 0.0005 > blast_results.tsv
     """
 
+}
+
+process FILTERPROTEINSBYBLAST {
+    debug true
+
+    publishDir "${params.epitope_output_folder}/filtered_blast_results"
+
+    input:
+    path blast_results_tsv
+    path input_proteins_file
+
+    output:
+    path "*.fasta"
+
+    script:
+    """
+    #!/usr/bin/python3
+    import pandas as pd
+    from Bio import SeqIO
+    from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
+
+    colnames = ['qseqid','sseqid','pident','length','mismatch','gapopen','qstart','qend','sstart','send','evalue','bitscore']
+    blast_df = pd.read_csv(f"${blast_results_tsv}", sep='\t', header=None, names=colnames)
+    blast_df = blast_df[blast_df['pident']>80.0]
+    template_accessions = list(blast_df['sseqid'].unique())
+    for template_accession in template_accessions:
+        template_blast = blast_df[blast_df['sseqid']==template_accession]
+        matched_proteins = list(template_blast['qseqid'].unique())
+
+        filtered_sequences = []
+
+        for record in SeqIO.parse(f"${input_proteins_file}", "fasta"):
+            if record.id in matched_proteins:
+                filtered_sequences.append(record)
+
+        print(f"number of blast hits for uniprot accession {template_accession}: {len(filtered_sequences)}")
+
+        with open(f"blast_hits_with_{template_accession}.fasta", "w") as output_handle:
+            SeqIO.write(filtered_sequences, output_handle, "fasta")
+    """
+}
+
+process CLUSTALOMEGAMSA {
+    debug true
+
+    publishDir "${params.epitope_output_folder}/clustalomega_results"
+
+    input:
+    path filtered_fasta
+
+    output:
+    path "*.txt"
+
+    script:
+    """
+    echo filtered_fasta $filtered_fasta && \
+    clustalo -v -i $filtered_fasta --outfmt=clu -o ${filtered_fasta.getBaseName()}_aligned.txt
+    """
 }
 
 workflow {
@@ -852,7 +911,10 @@ workflow {
 
     /*COLLECT B-CELL ANTIGEN TEMPLATES*/
     b_cell_antigen_fastas = GETUNIPROTBYACCESSION(Channel.from(params.b_cell_antigen_templates.split(",")))
-    BLASTFROMFILES(b_cell_antigen_fastas.collect(), protein_fasta_value_ch)
+    blast_results_tsv_ch = BLASTFROMFILES(b_cell_antigen_fastas.collect(), protein_fasta_value_ch)
+    filtered_fasta_ch = FILTERPROTEINSBYBLAST(blast_results_tsv_ch, protein_fasta_value_ch).flatten()
+    clustal_omega_output_ch = CLUSTALOMEGAMSA(filtered_fasta_ch)
+    clustal_omega_output_ch.collect().view()
 
     /* CALCULATE ALLELE FREQUENCY TABLES */
     allele_frequencies_table_ch = FORMATALLELEFREQUENCIES(params.allele_target_region)
