@@ -104,44 +104,44 @@ process FORMATALLELEFREQUENCIES {
 
     for allele_type in regional_allele_data[pd.notna(regional_allele_data["allele_type"])]['allele_type'].unique():
         allele_data = regional_allele_data[regional_allele_data["allele_type"]==allele_type]
-
+    
         allele_data = allele_data[(allele_data["locus"].str.contains(":")) & (pd.notna(allele_data["locus"]))]
         allele_data["locus"] = allele_data["locus"].apply(lambda x: ':'.join(x.split(':')[:2]))
-
+    
         allele_data["count"] = 1
         allele_denom = len(allele_data)
         allele_grp = allele_data[["locus","count"]].groupby("locus").sum().reset_index()
         allele_grp["prevalence"] = (allele_grp["count"] / allele_denom)
-
+        
         if allele_type in ["A","B","C"]:
             allele_grp["locus_join"] = ["HLA-"+i.replace("*","") for i in allele_grp["locus"]]
         else:
             allele_grp["locus_join"] = [i.replace("*","_").replace(":","") for i in allele_grp["locus"]]
 
         dfs.append(allele_grp)
-
+    
     allele_prevalence = pd.concat(dfs)
     allele_prevalence["region"] = "_".join("${regions}".split(","))
 
     allele_prevalence.to_csv("${regions.replaceAll(/,/,"_")}_regional_allele_frequencies.tsv", sep='\t')
     """
-
+  
 }
 
 process CDHIT {
     debug true
-    label 'CD_HIT'
+    label 'CD_HIT'    
 
     input:
     path protein_fasta
     val similarity_threshold
-
+    
     /*var outfile_name = "cdhit_out_sim_${similarity_threshold_str}.txt"*/
 
     output:
     path("cdhit_output.${similarity_threshold}"), emit: clstr_fasta
-    path("cdhit_output.${similarity_threshold}.clstr"), emit: clstr_file
-
+    path("cdhit_output.${similarity_threshold}.clstr"), emit: clstr_file 
+    
     script:
     """
     cd-hit \
@@ -154,14 +154,14 @@ process CDHIT {
     -aS 0.9 \
     -uS 0.1 \
     -d 200
-    """
+    """   
 }
 
 process CDHITTOTSV {
     debug true
-    publishDir "${params.epitope_output_folder}/cdhit_output"
+    publishDir "${params.epitope_output_folder}/cdhit_output"    
 
-    input:
+    input:    
     path clstr_file
     val similarity_threshold
     val clustering_type
@@ -179,7 +179,7 @@ process CDHITTOTSV {
 }
 
 process EPIDOPE {
-    debug true
+    debug true 
     label 'EPIDOPE'
     publishDir "${params.epitope_output_folder}/epidope_output"
 
@@ -195,12 +195,14 @@ process EPIDOPE {
     -p 12 \
     -i $protein_fasta \
     -o epidope_output_$protein_fasta
-    """
+    """    
 
 }
 
 process BEPIPRED {
     debug true
+
+    publishDir "${params.epitope_output_folder}/bepipred_raw_output"
 
     input:
     path protein_fasta
@@ -227,9 +229,63 @@ process BEPIPREDTOTSV {
 
     script:
     """
+    echo Bepipred Output Path
+    echo $bepipred_output
+
     python3 /bepipred_to_df.py \
     $bepipred_output \
     bepipred_out.tsv
+    """
+}
+
+process BEPIPREDTOTSV2 {
+    debug true
+    publishDir "${params.epitope_output_folder}/bepipred_output"
+
+    input:
+    path bepipred_output
+
+    output:
+    path("bepipred_out.tsv"), emit: bepipred_tsv
+
+    script:
+    """
+    #!/usr/bin/python3
+    import sys
+    import pandas as pd
+    
+    
+    bepipred_inpath = "${bepipred_output}"
+    bepipred_df_outpath = "bepipred_out.tsv"
+
+
+    with open(bepipred_inpath, 'r') as f:
+        rawdat = f.read().split('input: ')[1:]
+
+        dat = [i.split('Position\\tResidue')[0] for i in rawdat]
+        try:
+            protname,tabledat = dat[0].split('Predicted peptides\\n')
+        except:
+            pass
+
+        dfs = []
+
+        for datchunk in dat:
+            try:
+                protname,tabledat = datchunk.split('Predicted peptides\\n')
+                protname = protname.strip('\\n')
+                dfrows = [i.split('\\t') for i in tabledat.split('\\n')]
+                df = pd.DataFrame(dfrows[1:], columns=dfrows[0])
+                df['protein_full'] = protname
+                df['protein_id'] = protname.split(' ')[0]
+                df['protein_short'] = protname.split(' ')[0].split('.')[0]
+                dfs.append(df)
+            except:
+                pass
+
+    all_bepipred_out = pd.concat(dfs)
+
+    all_bepipred_out.to_csv(bepipred_df_outpath, sep='\\t', index=False)
     """
 }
 
@@ -403,14 +459,14 @@ process SPLITFASTAS {
     python3 /split_fastas.py \
     $protein_fasta \
     /home/pathinformatics/epitope_outputs/split_fastas
-    """
+    """    
 }
 
 process CONSOLIDATEEPITOPES {
     debug true
 
     output:
-    val 1
+    val 1    
 
     script:
     """
@@ -432,7 +488,7 @@ process CONSOLIDATEEPITOPES {
     epidope_df.rename(columns={"#Gene_ID":"protein_id","score":"epidope_score"}, inplace=True)
     epidope_df["type"] = "epidope"
     print(f"Epidope Table Size: {epidope_df.shape}")
-
+    
     # Consolidate from Bepipred
     print("Consolidating Bepipred")
     bepipred_output_files = glob.glob("${params.epitope_output_folder}/bepipred_output/*.tsv")
@@ -445,7 +501,7 @@ process CONSOLIDATEEPITOPES {
     bepipred_df = bepipred_df[(bepipred_df["Length"]>=5) & (bepipred_df["Length"]<=22)]
     bepipred_df.drop("Length", axis=1, inplace=True)
     print(f"Bepipred Table Size: {bepipred_df.shape}")
-
+    
     # Consolidate from Discotope
     print("Consolidating Discotope")
     discotope_files = glob.glob("${params.epitope_output_folder}/discotope_output/*.tsv")
@@ -468,7 +524,7 @@ process CONSOLIDATEEPITOPES {
         df["allele"] = df_for_col.columns[-1].strip('\t')
         netmhcpan_i_dfs.append(df)
     netmhcpan_i_df = pd.concat(netmhcpan_i_dfs)
-    netmhcpan_i_df.rename(columns={"ID":"protein_id"}, inplace=True)
+    netmhcpan_i_df.rename(columns={"ID":"protein_id"}, inplace=True) 
     netmhcpan_i_df = netmhcpan_i_df[["Peptide","protein_id","allele","EL-score","EL_Rank","BA-score","BA_Rank","Ave","NB"]].drop_duplicates()
     ##[["peptide","proteinid"]]
     netmhcpan_i_df.rename(columns={"Peptide":"sequence","EL-score":"netmhcpan_i_el_score","EL_Rank":"netmhcpan_i_el_rank","BA-score":"netmhcpan_i_ba_score","BA_Rank":"netmhcpan_i_ba_rank","Ave":"netmhcpan_i_ave","NB":"netmhcpan_i_nb"}, inplace=True)
@@ -514,11 +570,11 @@ process CONSOLIDATEEPITOPES {
     if not os.path.exists(all_concat_df_outdir):
         os.makedirs(all_concat_df_outdir)
 
-
-
+    
+    
     # Create consolidated FASTA
-    dfs = [epidope_df, bepipred_df, discotope_df, netmhcpan_i_df, netmhcpan_ii_df]
-
+    dfs = [epidope_df, bepipred_df, discotope_df, netmhcpan_i_df, netmhcpan_ii_df]    
+    
     def create_fasta_and_txt_from_df(df):
         sequence_records = []
         df_type = df["type"].values[0]
@@ -552,11 +608,11 @@ process GATHEREPITOPEFASTAS {
 
     output:
     path("all_consolidated_epitopes.fasta"), emit: gathered_epitopes_fasta
-
+    
     script:
     """
     cat ${params.epitope_output_folder}/consolidated_outputs/consolidated_epitopes*.fasta > \
-    all_consolidated_epitopes.fasta
+    all_consolidated_epitopes.fasta    
     """
 
 }
@@ -589,7 +645,7 @@ process PREPAREDATAFORJESSEV {
 
     allele_freq_df = pd.read_csv("${allele_frequencies_table}", sep='\t')
     netmhcpan_i_df_full = netmhcpan_i_df.merge(allele_freq_df, left_on="allele", right_on="locus_join", how="inner")
-
+    
     if "${params.include_docking_in_immunogenicity}"=="yes":
         pdb_episa_df = pd.read_csv("${params.epitope_output_folder}/pdb_episa_output/pdb_episa_output_table.tsv", sep='\t').rename(columns={"SEQUENCE":"sequence"})
         netmhcpan_i_df_full = netmhcpan_i_df_full.merge(pdb_episa_df, on="sequence", how="inner")
@@ -633,7 +689,7 @@ process RUNJESSEV {
     MIN_SPACER_LEN = 4
 
     shutil.copy("${params.epitope_output_folder}/jessev_input/$jessev_input_csv", "${params.epitope_output_folder}/jessev_input/jessev_input_0.csv")
-
+  
     for iter in range($iterations):
         print("running JessEV iteration:", iter)
 
@@ -644,10 +700,10 @@ process RUNJESSEV {
             df_output_csv_pre = pd.read_csv(output_csv_pre)
             df_input_csv_pre["jessev_used"] = [(i in df_output_csv_pre["vaccine"].values[0]) for i in df_input_csv_pre["epitope"]]
             input_csv_filtered = df_input_csv_pre[df_input_csv_pre["jessev_used"]==False].drop("jessev_used", axis=1)
-            input_csv_filtered.to_csv(f"${params.epitope_output_folder}/jessev_input/jessev_input_{iter}.csv", index=False)
+            input_csv_filtered.to_csv(f"${params.epitope_output_folder}/jessev_input/jessev_input_{iter}.csv", index=False)     
 
         jessev_statement = f"${params.epitope_output_folder}/jessev_input/jessev_input_{iter}.csv ${params.epitope_output_folder}/jessev_input/jessev_output_{iter}.csv"
-
+        
         client.containers.run("pmccaffrey6/jess_ev:latest",
             command=f"/opt/conda/envs/jessev/bin/python3 /JessEV/design.py -e 3 -s 4 {jessev_statement}",
             auto_remove=True,
@@ -685,7 +741,7 @@ process TCRPMHC {
     /opt/conda/envs/TCRpMHCmodels/bin/tcrpmhc_models \
     /home/pathinformatics/epitope_outputs/tcrpmhc_output/template_$input_fasta \
     -n $input_fasta \
-    -p $params.epitope_output_folder/tcrpmhc_output
+    -p $params.epitope_output_folder/tcrpmhc_output    
     """
 }
 
@@ -696,13 +752,13 @@ process PDBEPISA {
     val tcrpmhc_batch
 
     output:
-    val tcrpmhc_batch
+    val tcrpmhc_batch 
 
     script:
     """
     mkdir "${file(tcrpmhc_batch.first()).getBaseName()}" && \
     cp ${tcrpmhc_batch.join(" ")} ${file(tcrpmhc_batch.first()).getBaseName()} && \
-    /opt/run "${file(tcrpmhc_batch.first()).getBaseName()}" $params.epitope_output_folder/pdb_episa_output
+    /home/pathinformatics/run_mod "${file(tcrpmhc_batch.first()).getBaseName()}" $params.epitope_output_folder/pdb_episa_output
     """
 }
 
@@ -750,27 +806,27 @@ process PDBEPISATOTABLE {
                     numresidues = base_data[i]
                     for i in list(numresidues):
                         base_data[i.tag] = int(i.text)
-
+    
             sequence = ''.join([ three_to_one(list(i)[0].text.split(':')[-1].strip(' ').split(' ')[0]) for i in list(residue)])
             base_data['SEQUENCE'] = sequence
-
+    
             base_keys = base_data.keys()
             for base_item in base_keys:
                 if base_item.startswith('SOLVENTAREA'):
                     solvent_area = {i.tag:i.text for i in list(base_data[base_item])}
                 elif base_item.startswith('SOLVATIONENERGY'):
                     solvation_energy = {i.tag:i.text for i in list(base_data[base_item])}
-
+        
             for item in solvent_area.keys():
                 newkey = f"SOLVENTAREA_{item}"
                 base_data[newkey] = float(solvent_area[item])
-
+        
             for item in solvation_energy.keys():
                 newkey = f"SOLVATIONERGY_{item}"
                 base_data[newkey] = float(solvation_energy[item])
-
+        
             structure_data[structure.tag] = {k:v for k,v in base_data.items() if not type(v)==xml.etree.ElementTree.Element}
-
+    
         df_out = pd.DataFrame(structure_data.values())
         return df_out
 
@@ -806,7 +862,7 @@ process GETUNIPROTBYACCESSION {
 
     uniprot_out = json.loads(requests.get(f"https://www.ebi.ac.uk/proteins/api/proteins/${uniprot_accession}").text)
     fastaout = [SeqRecord(seq=Seq(str(uniprot_out['sequence']['sequence'])), id=uniprot_out['accession'], description="")]
-
+    
     if not os.path.exists("${params.epitope_output_folder}/b_cell_antigen_templates"):
         os.makedirs("${params.epitope_output_folder}/b_cell_antigen_templates")
 
@@ -868,7 +924,7 @@ process FILTERPROTEINSBYBLAST {
     template_accessions = list(blast_df['sseqid'].unique())
     for template_accession in template_accessions:
         template_blast = blast_df[blast_df['sseqid']==template_accession]
-        matched_proteins = list(template_blast['qseqid'].unique())
+        matched_proteins = list(template_blast['qseqid'].unique())        
 
         filtered_sequences = []
 
@@ -897,7 +953,135 @@ process CLUSTALOMEGAMSA {
     script:
     """
     echo filtered_fasta $filtered_fasta && \
-    clustalo -v -i $filtered_fasta --outfmt=clu -o ${filtered_fasta.getBaseName()}_aligned.txt
+    clustalo -v -i $filtered_fasta --force --outfmt=clu --wrap 10000 -o ${filtered_fasta.getBaseName()}_aligned.txt
+    """    
+}
+
+process CONSERVEDSEQSFROMCLUSTAL {
+    debug true
+
+    publishDir "${params.epitope_output_folder}/conserved_sequences_from_uniprot_templates"
+
+    input:
+    path clustal_output
+
+    output:
+    path("${clustal_output.getBaseName()}.fasta"), emit: clustal_conserved_fasta
+
+    script:
+    """
+    #!/usr/bin/python3
+    import os
+    import pandas as pd
+    from Bio import SeqIO
+    from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
+
+    df = pd.read_csv("${clustal_output}", sep='      ', skiprows=1, skipfooter=1, names=['seq_accession','sequence'], engine='python')
+
+    with open("${clustal_output}", 'r') as f:
+        annotations = f.readlines()[-1].strip('\\n').lstrip('                 ')
+    
+    indexes = list(range(len(annotations)))
+    #df.drop(df.tail(1).index,inplace=True)
+    
+    fragments = []
+    fragment = []
+    
+    for a,i in zip(annotations, indexes):
+        if (a != " "):
+            fragment.append(i)
+        else:
+            if len(fragment) >= 9:
+                fragments.append(fragment)
+            fragment = []
+        
+    sequence = df['sequence'].values[0]
+
+    output_seqrecords = []
+    
+    for idx,fragment in enumerate(fragments):
+        seq = sequence[fragment[0]:fragment[-1]]
+        clustal_filename = "${clustal_output}"
+        output_seqrecords.append(SeqRecord(seq=Seq(seq), name="", id=f"{clustal_filename.split('_')[3]}_fragment_{idx}", description=""))
+        #output_seqrecords.append(SeqRecord(seq=Seq(seq), name="", id=f"fragment_{idx}", description=""))
+
+    if not os.path.exists("${params.epitope_output_folder}/conserved_sequences_from_uniprot_templates"):
+        os.makedirs("${params.epitope_output_folder}/conserved_sequences_from_uniprot_templates")
+
+    with open("${clustal_output.getBaseName()}.fasta", "w") as output_handle:
+        SeqIO.write(output_seqrecords, output_handle, "fasta")
+    """
+}
+
+process COMBINEDCLUSTALEPITOPEFASTAS {
+    debug true
+
+    publishDir "${params.epitope_output_folder}/conserved_sequences_from_uniprot_templates"
+
+    input:
+    val conserved_fastas
+
+    output:
+    path("clustal_combined_output.fasta"), emit: clustal_combined_output_fasta
+
+    script:
+    """
+    echo ${conserved_fastas}
+    cat ${conserved_fastas.join(" ")} >> clustal_combined_output.fasta
+    """
+}
+
+process COMPILEFASTAFROMBCELLWORK {
+    debug true
+
+    publishDir "${params.epitope_output_folder}/b_cell_combined_fasta"
+
+    input:
+    val b_cell_tsvs
+
+    output:
+    path("combined_b_cell_epitopes.fasta")
+
+    script:
+    """
+    #!/usr/bin/python3
+    import pandas as pd
+    import os
+    from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
+    from Bio import SeqIO
+
+    input_files = "${b_cell_tsvs}"
+
+    fasta_seqrecords = []    
+
+    for input_file in [i.strip('[').strip(']').strip(' ') for i in input_files.split(",")]:
+        print("input file:", input_file)
+
+        if ("epidope" in input_file):
+            epidope_path = os.path.join(input_file,"predicted_epitopes.csv")
+            
+            epidope_df = pd.read_csv(epidope_path, sep='\\t')
+            for idx,row in epidope_df.iterrows():
+                record = SeqRecord(seq=Seq(row['sequence']), id=row['#Gene_ID'], name="", description="")
+                if (len(record.seq) >= 5):
+                    fasta_seqrecords.append(record)
+
+        elif ('bepipred' in input_file):
+            print('BEPIPRED')
+            bepipred_df = pd.read_csv(input_file, sep='\\t')
+            #print(bepipred_df)
+            for idx,row in bepipred_df[pd.notna(bepipred_df['Peptipe'])].iterrows():
+                record = SeqRecord(seq=Seq(row['Peptipe']), id=row['protein_id'], name="", description="")
+                if (len(record.seq) >= 5):
+                    fasta_seqrecords.append(record)
+        
+        #print(fasta_seqrecords)
+
+    with open("combined_b_cell_epitopes.fasta", "w") as output_handle:
+        SeqIO.write(fasta_seqrecords, output_handle, "fasta")
+    
     """
 }
 
@@ -914,7 +1098,9 @@ workflow {
     blast_results_tsv_ch = BLASTFROMFILES(b_cell_antigen_fastas.collect(), protein_fasta_value_ch)
     filtered_fasta_ch = FILTERPROTEINSBYBLAST(blast_results_tsv_ch, protein_fasta_value_ch).flatten()
     clustal_omega_output_ch = CLUSTALOMEGAMSA(filtered_fasta_ch)
-    clustal_omega_output_ch.collect().view()
+    clustal_formatted_output_ch = CONSERVEDSEQSFROMCLUSTAL(clustal_omega_output_ch)
+    conserved_epitopes_ch = COMBINEDCLUSTALEPITOPEFASTAS(clustal_formatted_output_ch.collect())
+    conserved_epitopes_ch.view()
 
     /* CALCULATE ALLELE FREQUENCY TABLES */
     allele_frequencies_table_ch = FORMATALLELEFREQUENCIES(params.allele_target_region)
@@ -926,11 +1112,11 @@ workflow {
     alphafold_pdb_ch = Channel.fromPath(params.alphafold_pdb_folder)
 
     mhc_i_alleles_ch = Channel.from('HLA-A01:01','HLA-A02:01','HLA-A03:01','HLA-A24:02','HLA-A26:01','HLA-B07:02','HLA-B08:01','HLA-B15:01','HLA-B27:05','HLA-B39:01','HLA-B40:01','HLA-B58:01')
-    mhc_ii_alleles_ch = Channel.from('DRB1_0301','DRB1_0701','DRB1_1501','DRB3_0101','DRB3_0202','DRB4_0101','DRB5_0101')
+    mhc_ii_alleles_ch = Channel.from('DRB1_0301','DRB1_0701','DRB1_1501','DRB3_0101','DRB3_0202','DRB4_0101','DRB5_0101')    
 
     /*split_fastas_ch = SPLITFASTAS(protein_fasta_ch)*/
     split_fastas_ch = Channel.fromPath('/home/pathinformatics/epitope_outputs/split_fastas/*')
-
+    
     /* CDHIT INPUT PROTEINS */
     if (params.cdhit_input_proteins == "yes") {
         cdhit_out_ch = CDHIT(protein_fasta_ch, params.cdhit_similarity_threshold)
@@ -938,31 +1124,44 @@ workflow {
     }
     /* B-CELL SCORING */
     if (params.bepipred == "yes") {
-        bepipred_out_ch = BEPIPRED(protein_fasta_clean_ch)
-        BEPIPREDTOTSV(bepipred_out_ch.bepipred_output)
+        if (params.score_conserved == "yes") {
+            bepipred_out_ch = BEPIPRED(conserved_epitopes_ch)
+        } else {
+            bepipred_out_ch = BEPIPRED(protein_fasta_clean_ch)
+        }
+        bepipred_tsv_ch = BEPIPREDTOTSV2(bepipred_out_ch.bepipred_output)
     }
     if (params.epidope == "yes") {
-        EPIDOPE(protein_fasta_clean_ch.splitFasta(by: 500, file: true))
+        if (params.score_conserved == "yes") {
+            epidope_tsv_ch = EPIDOPE(conserved_epitopes_ch)
+        } else {
+            epidope_tsv_ch = EPIDOPE(protein_fasta_clean_ch.splitFasta(by: 500, file: true))
+        }
     }
     if (params.dc_bcell == "yes") {
         MIGRATEAF2()
         discotope_out_ch = DISCOTOPE(alphafold_pdb_ch)
         DISCOTOPETOTSV(discotope_out_ch)
     }
+    COMPILEFASTAFROMBCELLWORK(bepipred_tsv_ch.mix(epidope_tsv_ch).collect())
+
     /* T-CELL SCORING */
     if (params.netmhcpani == "yes") {
         NETMHCPANI(protein_fasta_clean_ch, mhc_i_alleles_ch)
     }
     if (params.netmhcpanii == "yes") {
-        NETMHCPANII(protein_fasta_splits_value_ch, mhc_ii_alleles_ch)
+        NETMHCPANII(protein_fasta_splits_value_ch, mhc_ii_alleles_ch)  
     }
-
+    
     if (params.consolidate_epitopes == "yes") {
         consolidated_epitopes_output_ch = CONSOLIDATEEPITOPES()
         consolidated_epitopes_fasta_ch = GATHEREPITOPEFASTAS(consolidated_epitopes_output_ch)
-
+        
         cdhit_epitopes_out_ch = CDHIT(consolidated_epitopes_fasta_ch, params.cdhit_similarity_threshold)
         CDHITTOTSV(cdhit_epitopes_out_ch.clstr_file, params.cdhit_similarity_threshold, "epitopes")
+    }
+    if (params.score_t_against_b == "yes") {
+        println("SCORE T AGAINST B")
     }
     if (params.tcrpmhc == "yes") {
         protein_records_ch = Channel.fromPath("${params.epitope_output_folder}/netmhcpan_i_output/netmhcpan_i_top*.fasta").splitFasta(by: 1, file:true).take(100)

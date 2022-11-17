@@ -12,19 +12,25 @@ with open(bepipred_inpath, 'r') as f:
     rawdat = f.read().split('input: ')[1:]
 
     dat = [i.split('Position\tResidue')[0] for i in rawdat]
-    protname,tabledat = dat[0].split('Predicted peptides\n')
+    try:
+        protname,tabledat = dat[0].split('Predicted peptides\n')
+    except:
+        pass
 
     dfs = []
 
     for datchunk in dat:
-        protname,tabledat = datchunk.split('Predicted peptides\n')
-        protname = protname.strip('\n')
-        dfrows = [i.split('\t') for i in tabledat.split('\n')]
-        df = pd.DataFrame(dfrows[1:], columns=dfrows[0])
-        df['protein_full'] = protname
-        df['protein_id'] = protname.split(' ')[0]
-        df['protein_short'] = protname.split(' ')[0].split('.')[0]
-        dfs.append(df)
+        try:
+            protname,tabledat = datchunk.split('Predicted peptides\n')
+            protname = protname.strip('\n')
+            dfrows = [i.split('\t') for i in tabledat.split('\n')]
+            df = pd.DataFrame(dfrows[1:], columns=dfrows[0])
+            df['protein_full'] = protname
+            df['protein_id'] = protname.split(' ')[0]
+            df['protein_short'] = protname.split(' ')[0].split('.')[0]
+            dfs.append(df)
+        except:
+            pass
 
     all_bepipred_out = pd.concat(dfs)
 
